@@ -10,6 +10,7 @@ import { createSolarSystem } from "./setup/solar-system";
 import { createGUI, options } from "./setup/gui";
 import { LAYERS } from "./constants";
 import { InfoPanel } from "./setup/info-panel";
+import { Tutorial } from "./setup/tutorial";
 import { Body } from "./setup/planetary-object";
 
 THREE.ColorManagement.enabled = false;
@@ -138,6 +139,10 @@ bloomComposer.addPass(bloomPass);
 
 // Planet info panel
 const infoPanel = new InfoPanel();
+
+// First-visit tutorial
+const tutorial = new Tutorial();
+tutorial.init();
 
 // Click a planet to focus it and view its facts
 const raycaster = new THREE.Raycaster();
