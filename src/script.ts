@@ -140,9 +140,13 @@ bloomComposer.addPass(bloomPass);
 // Planet info panel
 const infoPanel = new InfoPanel();
 
-// First-visit tutorial
+// First-visit tutorial — show only after the loading screen is dismissed
 const tutorial = new Tutorial();
-tutorial.init();
+window.addEventListener(
+  "loading-dismissed",
+  () => tutorial.init(),
+  { once: true }
+);
 
 // Click a planet to focus it and view its facts
 const raycaster = new THREE.Raycaster();

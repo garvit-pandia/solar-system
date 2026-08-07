@@ -35,6 +35,7 @@ export const onLoaded = () => {
 
   loadContainer.addEventListener("click", () => {
     loadContainer.style.pointerEvents = "none";
+    window.dispatchEvent(new CustomEvent("loading-dismissed"));
     const animation = loadContainer.animate(
       { opacity: [1, 0], transform: ["scale(1)", "scale(0.75)"] },
       {

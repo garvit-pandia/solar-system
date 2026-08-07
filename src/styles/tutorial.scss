@@ -44,12 +44,15 @@
     right: 0.6rem;
     background: none;
     border: none;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.75);
     font-family: inherit;
     font-size: 0.7rem;
     cursor: pointer;
     text-transform: uppercase;
     letter-spacing: 0.1em;
+    text-decoration: underline;
+    text-decoration-color: rgba(255, 255, 255, 0.3);
+    text-underline-offset: 3px;
     transition: color 0.15s ease;
 
     &:hover {
