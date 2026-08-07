@@ -1,6 +1,7 @@
-import * as dat from "lil-gui";
+import GUI from "lil-gui";
 import { SolarSystem } from "./solar-system";
 import { LAYERS } from "../constants";
+import * as THREE from "three";
 
 export const options = {
   showPaths: false,
@@ -18,7 +19,7 @@ export const createGUI = (
   clock: THREE.Clock,
   camera: THREE.Camera
 ) => {
-  const gui = new dat.GUI();
+  const gui = new GUI();
 
   gui.title("Simulation Controls");
 

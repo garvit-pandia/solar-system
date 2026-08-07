@@ -2,6 +2,7 @@ import { PlanetaryObject } from "./planetary-object";
 import planetData from "../planets.json";
 import { Body } from "./planetary-object";
 import { setTextureCount } from "./textures";
+import * as THREE from "three";
 
 export type SolarSystem = Record<string, PlanetaryObject>;
 
