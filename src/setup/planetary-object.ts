@@ -76,6 +76,7 @@ export class PlanetaryObject {
     this.type = type;
     this.tilt = degreesToRadians(tilt);
     this.rng = body.offset ?? Math.random() * 2 * Math.PI;
+    this.mesh.userData.body = body;
 
     this.loadTextures(body.textures);
 

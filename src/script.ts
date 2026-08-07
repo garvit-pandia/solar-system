@@ -9,8 +9,23 @@ import { createLights } from "./setup/lights";
 import { createSolarSystem } from "./setup/solar-system";
 import { createGUI, options } from "./setup/gui";
 import { LAYERS } from "./constants";
+import { InfoPanel } from "./setup/info-panel";
+import { Tutorial } from "./setup/tutorial";
+import { Body } from "./setup/planetary-object";
 
 THREE.ColorManagement.enabled = false;
+
+const findClickedBody = (hits: THREE.Intersection[]): Body | null => {
+  for (const hit of hits) {
+    let object: THREE.Object3D | null = hit.object;
+    while (object) {
+      const body = object.userData.body as Body | undefined;
+      if (body) return body;
+      object = object.parent;
+    }
+  }
+  return null;
+};
 
 // Canvas
 const canvas = document.querySelector("canvas.webgl") as HTMLElement;
@@ -121,6 +136,34 @@ bloomComposer.setSize(sizes.width, sizes.height);
 bloomComposer.renderToScreen = true;
 bloomComposer.addPass(renderScene);
 bloomComposer.addPass(bloomPass);
+
+// Planet info panel
+const infoPanel = new InfoPanel();
+
+// Click a planet to focus it and view its facts
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+let pointerDown = new THREE.Vector2();
+
+canvas.addEventListener("pointerdown", (e) => {
+  pointerDown.set(e.clientX, e.clientY);
+});
+
+canvas.addEventListener("pointerup", (e) => {
+  if (Math.hypot(e.clientX - pointerDown.x, e.clientY - pointerDown.y) > 6) return;
+  pointer.x = (e.clientX / sizes.width) * 2 - 1;
+  pointer.y = -(e.clientY / sizes.height) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObjects(scene.children, true);
+  const body = findClickedBody(hits);
+  if (body) {
+    changeFocus(options.focus, body.name);
+    options.focus = body.name;
+    infoPanel.open(body);
+  } else {
+    infoPanel.close();
+  }
+});
 
 // Animate
 const clock = new THREE.Clock();
