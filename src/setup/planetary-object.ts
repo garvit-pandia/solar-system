@@ -14,6 +14,7 @@ export interface Body {
   textures: TexturePaths;
   type: string;
   tilt: number;
+  temp?: number;
   orbits?: string;
   labels?: PointOfInterest[];
   traversable: boolean;

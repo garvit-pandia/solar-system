@@ -10,7 +10,8 @@
     "traversable": true,
     "textures": {
       "map": "./textures/sun.jpg"
-    }
+    },
+    "temp": 5500
   },
   {
     "name": "Mercury",
@@ -25,7 +26,8 @@
     "textures": {
       "map": "./textures/mercury.jpg",
       "bump": "./textures/mercury-bump.jpg"
-    }
+    },
+    "temp": 167
   },
   {
     "name": "Venus",
@@ -40,7 +42,8 @@
     "textures": {
       "map": "./textures/venus.jpg",
       "bump": "./textures/venus-bump.jpg"
-    }
+    },
+    "temp": 464
   },
   {
     "name": "Earth",
@@ -58,7 +61,8 @@
       "specular": "./textures/earth-specular.jpg",
       "atmosphere": "./textures/earth-clouds.jpg",
       "atmosphereAlpha": "./textures/earth-clouds-alpha.jpg"
-    }
+    },
+    "temp": 15
   },
   {
     "name": "Moon",
@@ -76,10 +80,25 @@
       "bump": "./textures/moon-bump.jpg"
     },
     "labels": [
-      { "name": "Apollo 11", "type": "landing", "y": 0.36, "z": 0.05 },
-      { "name": "Tycho Crater", "y": -0.18, "z": -0.64 },
-      { "name": "Yutu-2", "type": "rover", "y": 3.06, "z": 0.67 }
-    ]
+      {
+        "name": "Apollo 11",
+        "type": "landing",
+        "y": 0.36,
+        "z": 0.05
+      },
+      {
+        "name": "Tycho Crater",
+        "y": -0.18,
+        "z": -0.64
+      },
+      {
+        "name": "Yutu-2",
+        "type": "rover",
+        "y": 3.06,
+        "z": 0.67
+      }
+    ],
+    "temp": -20
   },
   {
     "name": "Mars",
@@ -96,12 +115,37 @@
       "bump": "./textures/mars-bump.jpg"
     },
     "labels": [
-      { "name": "Olympus Mons", "type": "mountain", "y": 0.59, "z": 0.52 },
-      { "name": "Tharsis Montes", "type": "mountain", "y": 1.13, "z": 0.28 },
-      { "name": "Valles Marineris", "y": 1.6, "z": 1.75 },
-      { "name": "Perseverance", "type": "rover", "y": -1.96, "z": -0.87 },
-      { "name": "Curiosity", "type": "rover", "y": -0.8, "z": -0.1 }
-    ]
+      {
+        "name": "Olympus Mons",
+        "type": "mountain",
+        "y": 0.59,
+        "z": 0.52
+      },
+      {
+        "name": "Tharsis Montes",
+        "type": "mountain",
+        "y": 1.13,
+        "z": 0.28
+      },
+      {
+        "name": "Valles Marineris",
+        "y": 1.6,
+        "z": 1.75
+      },
+      {
+        "name": "Perseverance",
+        "type": "rover",
+        "y": -1.96,
+        "z": -0.87
+      },
+      {
+        "name": "Curiosity",
+        "type": "rover",
+        "y": -0.8,
+        "z": -0.1
+      }
+    ],
+    "temp": -63
   },
   {
     "name": "Jupiter",
@@ -116,7 +160,14 @@
     "textures": {
       "map": "./textures/jupiter.jpg"
     },
-    "labels": [{ "name": "Great Red Spot", "y": -0.84, "z": -0.41 }]
+    "labels": [
+      {
+        "name": "Great Red Spot",
+        "y": -0.84,
+        "z": -0.41
+      }
+    ],
+    "temp": -110
   },
   {
     "name": "Saturn",
@@ -131,7 +182,14 @@
     "textures": {
       "map": "./textures/saturn.jpg"
     },
-    "labels": [{ "name": "Saturn's Hexagon", "y": 0, "z": 1.57 }]
+    "labels": [
+      {
+        "name": "Saturn's Hexagon",
+        "y": 0,
+        "z": 1.57
+      }
+    ],
+    "temp": -140
   },
   {
     "name": "Uranus",
@@ -145,7 +203,8 @@
     "traversable": true,
     "textures": {
       "map": "./textures/uranus.jpg"
-    }
+    },
+    "temp": -195
   },
   {
     "name": "Neptune",
@@ -160,7 +219,14 @@
     "textures": {
       "map": "./textures/neptune.jpg"
     },
-    "labels": [{ "name": "Great Dark Spot", "y": 0.21, "z": -0.18 }]
+    "labels": [
+      {
+        "name": "Great Dark Spot",
+        "y": 0.21,
+        "z": -0.18
+      }
+    ],
+    "temp": -200
   },
   {
     "name": "Rings of Saturn",
@@ -188,7 +254,8 @@
     "traversable": false,
     "textures": {
       "map": "./textures/ganymede.jpg"
-    }
+    },
+    "temp": -163
   },
   {
     "name": "Titan",
@@ -202,7 +269,8 @@
     "traversable": false,
     "textures": {
       "map": "./textures/titan.webp"
-    }
+    },
+    "temp": -179
   },
   {
     "name": "Callisto",
@@ -216,7 +284,8 @@
     "traversable": false,
     "textures": {
       "map": "./textures/callisto.jpg"
-    }
+    },
+    "temp": -139
   },
   {
     "name": "Io",
@@ -230,7 +299,8 @@
     "traversable": false,
     "textures": {
       "map": "./textures/io.jpg"
-    }
+    },
+    "temp": -130
   },
   {
     "name": "Europa",
@@ -244,7 +314,8 @@
     "traversable": false,
     "textures": {
       "map": "./textures/europa.jpg"
-    }
+    },
+    "temp": -160
   },
   {
     "name": "Triton",
@@ -258,6 +329,7 @@
     "traversable": false,
     "textures": {
       "map": "./textures/triton.jpg"
-    }
+    },
+    "temp": -235
   }
 ]
