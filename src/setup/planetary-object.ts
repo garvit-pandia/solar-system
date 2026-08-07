@@ -76,11 +76,11 @@ export class PlanetaryObject {
     this.type = type;
     this.tilt = degreesToRadians(tilt);
     this.rng = body.offset ?? Math.random() * 2 * Math.PI;
-    this.mesh.userData.body = body;
 
     this.loadTextures(body.textures);
 
     this.mesh = this.createMesh();
+    this.mesh.userData.body = body;
 
     if (this.orbits) {
       this.path = createPath(this.distance);

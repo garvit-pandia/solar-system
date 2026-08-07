@@ -10,7 +10,6 @@ import { createSolarSystem } from "./setup/solar-system";
 import { createGUI, options } from "./setup/gui";
 import { LAYERS } from "./constants";
 import { InfoPanel } from "./setup/info-panel";
-import { Tutorial } from "./setup/tutorial";
 import { Body } from "./setup/planetary-object";
 
 THREE.ColorManagement.enabled = false;
