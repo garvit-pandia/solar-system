@@ -9,7 +9,7 @@ const SPEED_STEP = 1.25;
 export interface FreeRoamOptions {
   /** Camera driven by the controller (a scene-root child while active). */
   camera: THREE.PerspectiveCamera;
-  /** Canvas that requests pointer lock. */
+  /** Canvas that receives mouse-look and scroll input. */
   canvas: HTMLElement;
   /**
    * World-scale multiplier for the base speed — keeps free-roam feel
@@ -18,16 +18,19 @@ export interface FreeRoamOptions {
   getWorldScale: () => number;
   /** Called after the controller has fully detached itself. */
   onEnter?: () => void;
-  /** Called when the user exits (Esc) so the app can restore orbit mode. */
+  /** Called when the user exits (Esc or the button) so the app can restore orbit mode. */
   onExit?: () => void;
 }
 
 /**
  * Free-roaming first-person flight mode.
  *
- * Pointer-lock mouse look + WASD movement, Space/C for vertical motion,
- * Shift to boost. Scroll adjusts the flight speed while active. The camera
- * is driven directly (position + quaternion); the main loop's
+ * Mouse-look WITHOUT pointer lock: while the cursor is over the canvas,
+ * moving the mouse rotates the view (movementX/Y deltas work unlocked) and
+ * the cursor hides. Moving the cursor onto the toolbar restores a normal
+ * cursor, so every button stays clickable mid-flight. WASD movement,
+ * Space/C vertical, Shift boost, scroll adjusts flight speed. Esc exits.
+ * The camera is driven directly (position + quaternion); the main loop's
  * `camera.copy(fakeCamera)` keeps the render camera in sync.
  */
 export class FreeRoam {
@@ -70,41 +73,20 @@ export class FreeRoam {
     this.keys.clear();
 
     this.onEnter?.();
-
-    // In browsers that return a promise (Chrome 87+), a denied request must
-    // be caught — e.g. automation or iframe contexts without a user gesture.
-    try {
-      const result = this.canvas.requestPointerLock() as unknown;
-      if (result instanceof Promise) {
-        result.catch(() => {
-          /* pointer lock unavailable — fly with keyboard only */
-        });
-      }
-    } catch {
-      /* older browsers throw synchronously when lock is impossible */
-    }
   };
 
   exit = (): void => {
     if (!this.active) return;
     this.active = false;
-
-    if (document.pointerLockElement === this.canvas) {
-      document.exitPointerLock();
-    }
-
     this.keys.clear();
     this.onExit?.();
   };
 
-  private onPointerLockChange = (): void => {
-    if (this.active && document.pointerLockElement !== this.canvas) {
-      this.exit();
-    }
-  };
-
   private onMouseMove = (e: MouseEvent): void => {
-    if (!this.active || document.pointerLockElement !== this.canvas) return;
+    if (!this.active) return;
+    // Unlocked mouse-look: deltas work without pointer lock; the cursor
+    // disappears over the canvas (CSS) but reappears over the toolbar,
+    // keeping every button clickable during flight.
     this.yaw -= e.movementX * MOUSE_SENSITIVITY;
     this.pitch -= e.movementY * MOUSE_SENSITIVITY;
     this.pitch = Math.max(-PITCH_LIMIT, Math.min(PITCH_LIMIT, this.pitch));
@@ -112,6 +94,10 @@ export class FreeRoam {
 
   private onKeyDown = (e: KeyboardEvent): void => {
     if (!this.active) return;
+    if (e.code === "Escape") {
+      this.exit();
+      return;
+    }
     this.keys.add(e.code);
     // Stop the page/buttons from reacting to game keys while flying
     // (Space would otherwise "press" whatever button has focus).
@@ -141,8 +127,7 @@ export class FreeRoam {
 
   /** Attach input listeners. Called once at startup; listeners self-gate. */
   attach = (): void => {
-    document.addEventListener("pointerlockchange", this.onPointerLockChange);
-    document.addEventListener("mousemove", this.onMouseMove);
+    this.canvas.addEventListener("mousemove", this.onMouseMove);
     document.addEventListener("keydown", this.onKeyDown);
     document.addEventListener("keyup", this.onKeyUp);
     window.addEventListener("blur", this.onBlur);

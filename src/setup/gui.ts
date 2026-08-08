@@ -4,12 +4,19 @@ import { InstancedBelt } from "./asteroid-belt";
 import { LAYERS } from "../constants";
 import * as THREE from "three";
 
+/** Ambient intensity in "day" mode (toolbar toggle on). */
+export const AMBIENT_BRIGHT = 0.45;
+/** Ambient intensity in "night" mode (toolbar toggle off). */
+export const AMBIENT_DIM = 0.06;
+
 export const options = {
   // Display toggles (toolbar)
   showPlanetPaths: true,
   showMoonPaths: true,
   showLabels: true,
   ambientOn: true,
+  // Ambient intensity target (0–1); the tick loop lerps the light toward it.
+  ambient: AMBIENT_BRIGHT,
   // Simulation controls (GUI panel)
   showMoons: true,
   focus: "Sun",
@@ -24,10 +31,9 @@ export const options = {
   yangle: 0,
 };
 
-/** Ambient intensity in "day" mode (toolbar toggle on). */
-export const AMBIENT_BRIGHT = 0.55;
-/** Ambient intensity in "night" mode (toolbar toggle off). */
-export const AMBIENT_DIM = 0.06;
+/** Remembered day-mode level, so the toolbar toggle returns to the user's
+ *  last slider position instead of a hardcoded value. */
+let ambientDayLevel = AMBIENT_BRIGHT;
 
 const SPEED_PRESETS: Record<string, number> = {
   "×0.125": 0.125,
@@ -80,8 +86,17 @@ export const createGUI = (
 
   gui.title("Simulation Controls");
 
-  // Note: ambient lighting deliberately has NO control here — the toolbar
-  // Ambient button is the single, canonical control (day/night).
+  // Note: ambient has BOTH a fine-grained slider here AND a quick day/night
+  // toggle in the toolbar. They share one value (options.ambient); the
+  // slider is the fine control, the button is the preset.
+  gui
+    .add(options, "ambient", 0, 1, 0.01)
+    .name("Ambient Intensity")
+    .onChange((value: number) => {
+      ambientDayLevel = value;
+      options.ambientOn = value > 0.1;
+      syncToolbar();
+    });
 
   // Toggle moons
   gui
@@ -168,10 +183,18 @@ export const createGUI = (
     syncToolbar();
   });
 
-  // Ambient day/night toggle — the ONLY ambient control. The actual
-  // intensity animates smoothly in the main loop's tick (see script.ts).
+  // Ambient day/night toggle (toolbar). The actual intensity animates
+  // smoothly in the main loop's tick toward options.ambient.
   document.getElementById("btn-ambient")?.addEventListener("click", () => {
-    options.ambientOn = !options.ambientOn;
+    if (options.ambientOn) {
+      // → night: dim to the night level
+      options.ambient = AMBIENT_DIM;
+      options.ambientOn = false;
+    } else {
+      // → day: back to the user's last day level (slider position)
+      options.ambient = ambientDayLevel;
+      options.ambientOn = true;
+    }
     syncToolbar();
   });
 

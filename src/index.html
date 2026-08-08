@@ -190,9 +190,9 @@
 
     <div id="fps-hint">
       <span class="fps-title">Free roam</span>
-      <span>WASD move · Mouse look · Space / C up &amp; down · Shift boost · Scroll speed</span>
+      <span>WASD move · Mouse to look · Space / C up &amp; down · Shift boost · Scroll speed</span>
       <span class="fps-speed">Speed <span id="fps-speed-value"></span></span>
-      <span class="fps-exit">Click the rocket button or press Esc to return to orbit</span>
+      <span class="fps-exit">Toolbar stays clickable while flying · Free Roam button or Esc to return</span>
     </div>
 
     <div id="help-panel">
@@ -209,13 +209,14 @@
             <li><b>Hover</b> — shows the body's name.</li>
             <li><b>Search (Ctrl+K)</b> — fuzzy-jump to any of the 23 bodies, including the dwarf planets. Number keys <b>1–9/0</b> jump straight to the ten classic bodies.</li>
             <li><b>‹ › buttons</b> — hop between planets.</li>
-            <li><b>Free Roam button</b> — first-person FPS flight: WASD to move, mouse to look, Space/C up &amp; down, Shift boost, scroll to change speed, Esc to exit. Exiting remembers your position, so re-entering continues where you left off.</li>
+            <li><b>Free Roam button</b> — first-person FPS flight: WASD to move, move the mouse over the 3D view to look (no pointer lock — the toolbar stays clickable mid-flight), Space/C up &amp; down, Shift boost, scroll to change speed, Esc to exit. Exiting remembers your position, so re-entering continues where you left off.</li>
           </ul>
         </section>
 
         <section>
           <h3>Simulation controls (gear button)</h3>
           <ul>
+            <li><b>Ambient Intensity</b> — fine-grained fill-light slider (0–1). The toolbar Ambient button is its quick day/night preset.</li>
             <li><b>Show Moons</b> — show or hide all moons.</li>
             <li><b>Run</b> — pause / resume the simulation clock.</li>
             <li><b>Speed Preset</b> — quick time speeds: ×0.125, ×1, ×10, ×100.</li>
@@ -233,9 +234,9 @@
             <li><b>Search</b> — fuzzy jump to any body (Ctrl+K; 1–9/0 jump to the classic planets).</li>
             <li><b>Planet Orbits</b> — orbit rings of the planets &amp; dwarf planets around the Sun.</li>
             <li><b>Moon Orbits</b> — orbit rings of the moons around their host planets (separate from the planet rings).</li>
-            <li><b>Ambient</b> — day / night fill light. This is the only ambient control.</li>
+            <li><b>Ambient</b> — quick day / night fill-light preset (fine control lives in Settings → Ambient Intensity).</li>
             <li><b>Labels</b> — points of interest (Olympus Mons, Apollo 11…).</li>
-            <li><b>Free Roam</b> — first-person flight; WASD to move, mouse to look, Space/C up &amp; down, Shift boost, scroll speed, Esc to exit. <i>Your position is remembered — exiting and re-entering continues where you left off.</i></li>
+            <li><b>Free Roam</b> — first-person flight; WASD to move, move the mouse over the 3D view to look (toolbar stays clickable), Space/C up &amp; down, Shift boost, scroll speed, Esc to exit. <i>Your position is remembered — exiting and re-entering continues where you left off.</i></li>
             <li><b>Tour</b> — cinematic flight Sun → Neptune.</li>
             <li><b>Quiz</b> — 6 questions; pick an option below the question or click the planet in 3D.</li>
             <li><b>Settings</b> — the full simulation control panel.</li>
@@ -247,9 +248,10 @@
         <section>
           <h3>Sim date</h3>
           <p>
-            Top-left HUD shows the simulated date. It advances 8 hours per real
-            second at ×1 speed, respects pause and reverse, and matches the
-            planets' orbital motion.
+            Top-left HUD shows the simulated date, anchored to the J2000 epoch
+            (1 Jan 2000) so it always matches the planets' positions. It
+            advances 8 hours per real second at ×1 speed, respects pause and
+            reverse, and shows UTC.
           </p>
         </section>
 

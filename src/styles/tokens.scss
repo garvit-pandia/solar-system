@@ -1,0 +1,104 @@
+/* ============================================================
+   DESIGN TOKENS — deep-space glass console
+   Single source of truth for every surface in the app.
+   ============================================================ */
+
+// Typography
+$font: "Trispace", sans-serif;
+$tracking: 0.06em;
+
+// Glass panels
+$panel-bg: rgba(10, 12, 26, 0.66);
+$panel-bg-strong: rgba(10, 12, 26, 0.85);
+$panel-bg-solid: rgba(10, 12, 26, 0.94);
+$panel-blur: blur(16px) saturate(1.4);
+$hairline: 1px solid rgba(255, 255, 255, 0.1);
+$hairline-strong: 1px solid rgba(255, 255, 255, 0.16);
+$panel-shadow:
+  0 10px 40px rgba(0, 0, 0, 0.5),
+  inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+// Radius scale — 16 panels · 11 buttons · 8 inputs · 999 pills
+$radius-panel: 16px;
+$radius-btn: 11px;
+$radius-input: 8px;
+$radius-pill: 999px;
+
+// Accent — single warm amber
+$accent: #ffc850;
+$accent-text: #f5c97e;
+$accent-fill: rgba(232, 163, 61, 0.14);
+$accent-border: rgba(232, 163, 61, 0.5);
+$accent-glow: 0 0 14px rgba(232, 163, 61, 0.25);
+
+// Semantic
+$error: #ff7b72;
+$success: #7ee787;
+
+// Text ladder — white at fixed opacities
+$text-92: rgba(255, 255, 255, 0.92);
+$text-72: rgba(255, 255, 255, 0.72);
+$text-60: rgba(255, 255, 255, 0.6);
+$text-55: rgba(255, 255, 255, 0.55);
+$text-45: rgba(255, 255, 255, 0.45);
+
+// Shared recipes
+%glass-panel {
+  background: $panel-bg;
+  backdrop-filter: $panel-blur;
+  -webkit-backdrop-filter: $panel-blur;
+  border: $hairline;
+  border-radius: $radius-panel;
+  box-shadow: $panel-shadow;
+}
+
+%glass-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.1rem;
+  border-radius: $radius-btn;
+  background: rgba(255, 255, 255, 0.06);
+  border: $hairline;
+  color: $text-92;
+  font-family: $font;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: $tracking;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.12s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.28);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba($accent, 0.7);
+    outline-offset: 2px;
+  }
+}
+
+%primary-btn {
+  @extend %glass-btn;
+  background: $accent;
+  border-color: transparent;
+  color: #0f0f1e;
+  font-weight: 800;
+
+  &:hover {
+    background: #ffd97a;
+    border-color: transparent;
+  }
+}

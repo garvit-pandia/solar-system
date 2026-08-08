@@ -1,90 +1,91 @@
-# STATUS — Improvement Round 4: UI overhaul + orbit rings + FPS resume (2026-08-08)
+# STATUS — Improvement Round 5: Lighting, sim date, free-roam UX, labels, UI identity (2026-08-08)
 
-Previous round: improvement round 3 (P0 pack — search palette, dwarf planets,
-Kuiper belt, starfield). State: COMPLETE — free-roam position resume, single
-ambient control, split planet/moon orbit-ring toggles, full toolbar redesign,
-two critical orbit-ring bugs fixed; verified via console assertions +
-vision-model checks + screenshots + typecheck + build.
+Previous round: round 4 (FPS resume, split orbit rings, toolbar redesign).
+State: COMPLETE — sun lighting actually lights planets, sim date rewritten on
+the J2000 epoch, free-roam UI stays clickable + no Sun snap-back, POI label
+collisions solved, full deep-space glass console UI identity across every
+surface. Verified via console assertions + vision-model ratings + typecheck +
+build. Plan: docs/superpowers/plans/2026-08-08-round5-ui-lighting.md.
 
 ## What changed this round
 
-1. **Free-roam FPS resumes where you quit**
-   - `script.ts` `onExit` now captures the world-space position AND quaternion
-     before re-parenting the camera, then converts them into the focused
-     body's local frame (correct under scaled true-scale meshes) instead of
-     snapping to `(minDistance, minDistance/3, 0)`.
-   - `fly.ts` `enter()` now derives yaw/pitch from the camera's current
-     quaternion, so re-entering free roam keeps the same look direction too.
-   - The bottom nav pill is hidden while flying (`body.fps-active .caption`)
-     — it previously overlapped the FPS hint at the same bottom-centre spot.
+1. **Lighting — the "Earth/Venus dark from all sides" bug, root-caused**
+   - The point light lives at the scene origin, INSIDE the Sun's sphere. The
+     Sun mesh had `castShadow = true`, so it occluded every light ray — the
+     sun light contributed ZERO to every planet (planets were ambient-only).
+     Fixed: `Sun.mesh.castShadow = false` (script.ts) + `pointLight.decay = 0`
+     (lights.ts) so sunlight reaches the whole system.
+   - Tuned: point 1.15→0.95, AMBIENT_BRIGHT 0.55→0.45 (bright cloud bands
+     kept texture, no clipping — verified on Jupiter's bands, exposure 10/10
+     day-side with a clear night terminator on Earth, Venus, Mars, Saturn).
+   - The apparent "blowout" in earlier shots was the Sun's bloom halo when it
+     sat in frame behind a planet — camera framing, not lighting.
 
-2. **Ambient light — one control, working properly**
-   - The lil-gui "Ambient Intensity" slider was REMOVED. The toolbar Ambient
-     button is now the single canonical control (day `0.55` / night `0.06`,
-     `AMBIENT_BRIGHT` / `AMBIENT_DIM` in gui.ts), with a smooth fade in the
-     main tick loop instead of an instant jump.
-   - The old button logic (`intensity === 0.1 ? 0.5 : 0.1`) was stateful
-     hackery that misbehaved after any GUI slider use — gone.
+2. **Sim date rewritten on the J2000 epoch**
+   - Old: `Date.now() + elapsedTime/3 days` — a real-clock base that never
+     matched the planets (positions start from J2000 mean longitudes).
+   - New: `J2000_EPOCH + (elapsedTime/3) * 86400000` — the date now always
+     agrees with the sky; "UTC" appended to the HUD. Rate verified: ×1 = 8h
+     per real second; reverse walks backwards; pause freezes (clean test
+     methodology: let the 500 ms HUD throttle settle before reading).
 
-3. **Orbit rings — two separate toggles + two critical bug fixes**
-   - `options.showPlanetPaths` (bodies orbiting the Sun: all 8 planets + 5
-     dwarf planets = 13 rings) and `options.showMoonPaths` (8 moon rings:
-     Moon, Charon, Ganymede, Titan, Callisto, Io, Europa, Triton) replace the
-     single broken `showPaths`. Rings of Saturn no longer gets a degenerate
-     zero-radius path (`planetary-object.ts` skips `type === "ring"`).
-   - **Bug #1 (the "toggle orbit is not working" report):** `applyTrueScale`
-     reset every path's scale to `1` when leaving true scale — a unit circle
-     — collapsing all orbit rings onto their parent body. Also the true-scale
-     ring radius was `activeDistance/baseDistance` instead of
-     `activeDistance`, so rings didn't match the real orbits. Fixed: path
-     scale = `activeDistance` in true scale (world radius = parentWorld ×
-     activeDistance = real orbit, verified Earth = 23,481 = 149.6M km ÷ 6371)
-     and `baseDistance` in view mode.
-   - **Bug #2:** true-scale force-show of the planet rings (reference grid)
-     was never restored on exit — `savedPlanetPaths` now remembers the user's
-     choice and restores it (verified: off → true scale on (forced) → off →
-     back to off).
-   - `applyPathVisibility(solarSystem)` + `syncToolbar()` centralise ring
-     visibility and button pressed-states.
+3. **Free-roam UX**
+   - **Toolbar clickable mid-flight**: pointer lock removed; mouse-look now
+     uses unlocked `movementX/Y` over the canvas with `cursor: none` there —
+     the cursor reappears over the toolbar, so every toggle works while
+     flying (verified: ambient toggle clicked mid-flight, still flying).
+     Esc exits; copy updated in the FPS hint / help / tutorial.
+   - **No Sun snap-back**: on exit the camera's local radius can exceed
+     `controls.maxDistance` (50 for the Sun) and OrbitControls yanks it back.
+     The limits are now extended AFTER `updateCameraLimits` (which resets
+     them — the original placement was clobbered) so the saved position
+     survives the clamp. Verified: flew to 67.3 units, exited, camera stayed
+     at 67.3 with maxDistance extended to 74.
 
-4. **Toolbar redesign (modern dock)**
-   - Old floating icon row replaced by a glassmorphic dock (`toolbar.scss`):
-     grouped sections (Navigation · Orbits · Display · Modes · Extras) with
-     separators, icon + label buttons, warm-amber active states
-     (`aria-pressed` + `.is-active`), hover lift, focus rings; collapses to
-     icon-only below 1180px.
-   - All 13 icons redrawn as consistent stroke icons (magnifier, planet-ring,
-     moon-ring, sun rays, map pin, rocket, play, lightbulb, gear, help,
-     GitHub octocat, chevrons).
-   - Bottom focus nav restyled as a matching glass pill with round chevron
-     buttons.
-   - **Bonus fix:** the Labels toggle was broken since round 1 — it toggled
-     the render camera's layers, which `camera.copy(fakeCamera)` overwrote
-     every frame (Object3D.copy copies layers). Now toggles the fakeCamera
-     (source of truth); verified POI labels hide/show.
+4. **POI labels — collision-free glass chips**
+   - Labels are now glass chips (dark glass, hairline, 6px radius, icon +
+     uppercase text) with content wrapped in `.label-inner` so the app owns a
+     transform the CSS2DRenderer won't overwrite.
+   - Collision system in label.ts: per-frame anchor recovery (rect − current
+     transform), vector repulsion with vertical bias, then union-find
+     clusters are fanned into tidy vertical stacks (26px pitch). Offsets
+     persist across frames (no reset/drift). Verified: Mars' five POIs =
+     zero overlapping rects, stable over 2 s; vision confirms separated chips.
 
-5. **Docs & tutorial updated** — tutorial steps re-targeted (`#btn-paths` →
-   `#btn-planet-paths` + new Moon Orbits step), help panel rewritten for the
-   new toolbar, free-roam resume documented.
+5. **UI identity — deep-space glass console (anti-slop pass)**
+   - New `src/styles/tokens.scss`: the full token set (panel bg/blur/hairline,
+     radius scale 16/11/8/999, panel shadow + inset highlight, single amber
+     accent #ffc850 + #f5c97e text + rgba(232,163,61,0.14) fill, white
+     opacity ladder 0.92/0.72/0.6/0.55/0.45, error #ff7b72, tracking 0.06em,
+     Trispace) plus `%glass-panel`, `%glass-btn`, `%primary-btn` recipes.
+   - Every component file refactored onto the tokens: toolbar.scss, gui.scss
+     (caption pill + FULL lil-gui theme via its CSS custom properties —
+     the previously stock LIGHT panel is now dark glass with amber title,
+     matching the app), hud.scss (sim-date + tooltip chips), info-panel.scss,
+     tutorial.scss (welcome + spotlight + tooltip), quiz.scss, help-panel.scss
+     (+ fps-hint), nav-palette.scss (terracotta selection → amber),
+     loading-screen.scss (uppercase Trispace title, amber "GARVIT").
+   - Forbidden items respected: no purple gradients, no second accent, no
+     uniform rounding, no stock buttons, no centered-logo layout changes.
 
 ## Verification summary (2026-08-08)
 
 - typecheck: clean · build: clean
-- Console assertions: 13 planet rings + 8 moon rings all visible; ring
-  excluded; toggles independent (planet off → moons still on, and vice
-  versa); aria-pressed + is-active synced; ambient smooth fade 0.55 → 0.06;
-  labels toggle hides exactly the focused body's POIs; FPS enter → fly →
-  exit → world position preserved to <0.01 units (0,20,0 → 0,18,0 → 0,18,0)
-  and re-enter continues from the same spot with look direction resumed;
-  true-scale round-trip: Earth ring world radius 23,481 = exact real orbit,
-  restored to 7.4126 on exit
-- Vision checks: toolbar (glass dock, gold active states, labels, no
-  overlap), planet orbit rings as full concentric circles with planets on
-  them, Earth close-up with Moon sitting on its ring, moon-ring toggle
-  (button greyed + ring gone, Earth ring intact), ambient day vs night
-  (strong vs muted contrast), free-roam HUD (nav pill hidden)
-- Screenshots refreshed: docs/screenshots/{toolbar-ui, orbit-rings,
-  moon-orbit-ring, ambient-on, ambient-off, free-roam-hud}.png
+- Console: point decay 0 + Sun castShadow false; sim date J2000-anchored
+  (2000-01-01 23:06 after load), 8h/s at ×1, reverse −4h, pause frozen;
+  ambient slider 0.45→0.3 (lerp), toolbar toggle → 0.06 → restores 0.3;
+  labels: 5 Mars POIs 0 overlaps (stable), earlier version 4–5 overlaps;
+  FPS: ambient toggle mid-flight, exit at 67.3 > maxDistance 50 preserved;
+  true-scale round-trip intact (Earth orbit 23,481 world units, path on
+  orbit); orbit rings 13 planet + 8 moon still independent
+- Vision ratings (all surfaces): settings panel "dark glass with amber
+  accents, matches toolbar", info card "matches perfectly, no issues",
+  quiz "consistent design language", help "cohesive console feel", palette
+  "frosted glass, matches", Mars labels "styled glass chips, non-overlapping",
+  Earth/Venus/Jupiter/Saturn "clear day/night terminator, no blowout"
+- Screenshots: docs/screenshots/{settings-panel, info-card, quiz-card,
+  help-panel, search-palette, mars-labels, free-roam-ui, earth-lighting,
+  venus-lighting, jupiter-lighting}.png
 
 ## Deploy (user)
 

@@ -1,3 +1,9 @@
+@use "./tokens.scss" as *;
+
+/* ============================================================
+   Welcome card + spotlight tour
+   ============================================================ */
+
 #welcome-card {
   position: fixed;
   top: 50%;
@@ -5,14 +11,11 @@
   transform: translate(-50%, -50%) scale(0.95);
   z-index: 12;
   width: min(420px, 90vw);
-  padding: 1.75rem 1.5rem;
-  background: rgba(15, 15, 30, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
+  padding: 1.9rem 1.7rem 1.6rem;
+  @extend %glass-panel;
+  background: $panel-bg-strong;
   color: white;
-  font-family: "Trispace", sans-serif;
+  font-family: $font;
   text-align: center;
   opacity: 0;
   pointer-events: none;
@@ -24,35 +27,43 @@
     pointer-events: auto;
   }
 
+  &::before {
+    content: "";
+    display: block;
+    width: 44px;
+    height: 3px;
+    margin: 0 auto 1rem;
+    border-radius: 2px;
+    background: $accent;
+  }
+
   h2 {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     font-weight: 800;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 
   p {
     margin-top: 0.75rem;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 200;
     line-height: 1.6;
-    color: rgba(255, 255, 255, 0.8);
+    color: $text-72;
   }
 
   .skip {
     position: absolute;
-    top: 0.6rem;
-    right: 0.6rem;
+    top: 0.7rem;
+    right: 0.8rem;
     background: none;
     border: none;
-    color: rgba(255, 255, 255, 0.8);
+    color: $text-55;
     font-family: inherit;
-    font-size: 0.78rem;
+    font-size: 0.68rem;
     cursor: pointer;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    text-decoration: underline;
-    text-decoration-color: rgba(255, 255, 255, 0.3);
-    text-underline-offset: 3px;
     transition: color 0.15s ease;
 
     &:hover {
@@ -61,45 +72,24 @@
   }
 
   .welcome-actions {
-    margin-top: 1.25rem;
-  }
+    margin-top: 1.4rem;
+    display: flex;
+    justify-content: center;
+    gap: 0.7rem;
 
-  #btn-guide {
-    background: #ffc850;
-    color: #111;
-    border: none;
-    padding: 0.6rem 1.5rem;
-    border-radius: 8px;
-    font-family: inherit;
-    font-weight: 800;
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: background 0.15s ease;
-
-    &:hover {
-      background: #ffd97a;
+    #btn-guide {
+      @extend %primary-btn;
+      font-size: 0.75rem;
     }
-  }
 
-  #btn-guide2 {
-    background: rgba(255, 255, 255, 0.08);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 0.6rem 1.2rem;
-    border-radius: 8px;
-    font-family: inherit;
-    font-weight: 500;
-    font-size: 0.8rem;
-    cursor: pointer;
-    margin-left: 0.6rem;
-    transition: background 0.15s ease;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.18);
+    #btn-guide2 {
+      @extend %glass-btn;
+      font-size: 0.75rem;
     }
   }
 }
 
+/* Spotlight tour */
 #spotlight {
   position: fixed;
   inset: 0;
@@ -120,8 +110,8 @@
   #spotlight-highlight {
     position: absolute;
     display: none;
-    border: 2px solid #ffc850;
-    border-radius: 10px;
+    border: 2px solid $accent;
+    border-radius: $radius-btn;
     box-shadow: 0 0 24px rgba(255, 200, 80, 0.45);
     transition: left 0.25s ease, top 0.25s ease, width 0.25s ease,
       height 0.25s ease;
@@ -133,26 +123,27 @@
     left: 50%;
     transform: translateX(-50%);
     width: min(360px, 85vw);
-    padding: 0.9rem 1.1rem;
-    background: rgba(15, 15, 30, 0.92);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    @extend %glass-panel;
+    background: $panel-bg-solid;
     color: white;
-    font-family: "Trispace", sans-serif;
+    font-family: $font;
     text-align: center;
 
     h3 {
-      font-size: 0.9rem;
+      font-size: 0.82rem;
       font-weight: 800;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: $accent-text;
     }
 
     p {
-      margin-top: 0.4rem;
-      font-size: 0.75rem;
+      margin-top: 0.45rem;
+      font-size: 0.72rem;
       font-weight: 200;
-      line-height: 1.5;
-      color: rgba(255, 255, 255, 0.8);
+      line-height: 1.55;
+      color: $text-72;
     }
   }
 
@@ -164,54 +155,43 @@
     display: flex;
     gap: 1rem;
     align-items: center;
-    font-family: "Trispace", sans-serif;
+    font-family: $font;
     pointer-events: none;
 
     button {
-      background: rgba(255, 255, 255, 0.08);
-      color: white;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      padding: 0.45rem 1.2rem;
-      border-radius: 6px;
-      font-family: inherit;
-      font-size: 0.75rem;
-      cursor: pointer;
-      transition: background 0.15s ease;
-
-      &:hover {
-        background: rgba(255, 255, 255, 0.18);
-      }
+      @extend %glass-btn;
+      font-size: 0.7rem;
+      padding: 0.45rem 1.1rem;
     }
 
     #btn-next-step {
-      background: #ffc850;
-      color: #111;
-      border: none;
-      font-weight: 800;
-
-      &:hover {
-        background: #ffd97a;
-      }
+      @extend %primary-btn;
+      font-size: 0.7rem;
+      padding: 0.45rem 1.1rem;
     }
 
     #spotlight-counter {
-      color: rgba(255, 255, 255, 0.6);
-      font-size: 0.7rem;
+      color: $text-60;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
     }
   }
 }
 
+/* Hover tooltip (data-tooltip) */
 #tooltip {
   position: fixed;
   display: none;
   padding: 0.35rem 0.7rem;
-  background: rgba(15, 15, 30, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 6px;
+  @extend %glass-panel;
+  background: $panel-bg-strong;
+  border-radius: $radius-input;
   color: white;
-  font-family: "Trispace", sans-serif;
-  font-size: 0.65rem;
+  font-family: $font;
+  font-size: 0.62rem;
   font-weight: 200;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   white-space: nowrap;
   pointer-events: none;
   transform: translate(-50%, -100%);

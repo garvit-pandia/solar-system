@@ -18,8 +18,6 @@ import {
   options,
   applyPathVisibility,
   syncToolbar,
-  AMBIENT_BRIGHT,
-  AMBIENT_DIM,
 } from "./setup/gui";
 import { LAYERS } from "./constants";
 import { InfoPanel } from "./setup/info-panel";
@@ -33,6 +31,10 @@ import { CinematicTour } from "./setup/tour";
 import { FreeRoam } from "./setup/fly";
 
 THREE.ColorManagement.enabled = false;
+
+// J2000 epoch (2000-01-01T12:00 UTC) — the same epoch the ephemeris uses for
+// mean longitudes, so the simulated date always matches the planet positions.
+const J2000_EPOCH = Date.UTC(2000, 0, 1, 12);
 
 const findClickedBody = (hits: THREE.Intersection[]): Body | null => {
   for (const hit of hits) {
@@ -107,6 +109,10 @@ document.getElementById("btn-next")?.addEventListener("click", () => {
 
 // Solar system
 const [solarSystem, planetNames] = createSolarSystem(scene);
+
+// The point light lives at the Sun's centre — if the Sun mesh cast
+// shadows it would occlude every ray and black out the whole system.
+solarSystem["Sun"].mesh.castShadow = false;
 
 // Asteroid belt
 const asteroidBelt = createAsteroidBelt(scene);
@@ -306,6 +312,18 @@ const fps = new FreeRoam({
     controls.target.set(0, 0, 0);
     controls.enabled = true;
     updateCameraLimits(options.focus);
+    // OrbitControls clamps the radius to [minDistance, maxDistance] on its
+    // next update — flying beyond maxDistance (e.g. 50 for the Sun) would
+    // yank the camera back toward the focus body. Extend the limits AFTER
+    // updateCameraLimits (which resets them) so the saved position survives
+    // the clamp.
+    const localRadius = fakeCamera.position.length();
+    if (localRadius > controls.maxDistance) {
+      controls.maxDistance = localRadius * 1.1;
+    }
+    if (localRadius < controls.minDistance) {
+      controls.minDistance = localRadius * 0.9;
+    }
   },
 });
 fps.attach();
@@ -450,11 +468,11 @@ if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
   const dt = Math.min(clock.getDelta(), 0.1);
   elapsedTime += dt * options.speed;
 
-  // Smooth ambient transitions when the toolbar day/night toggle is used.
-  const ambientTarget = options.ambientOn ? AMBIENT_BRIGHT : AMBIENT_DIM;
-  if (ambientLight.intensity !== ambientTarget) {
+  // Smooth ambient transitions toward the current target (toolbar preset
+  // or GUI slider).
+  if (ambientLight.intensity !== options.ambient) {
     ambientLight.intensity +=
-      (ambientTarget - ambientLight.intensity) * Math.min(1, dt * 6);
+      (options.ambient - ambientLight.intensity) * Math.min(1, dt * 6);
   }
 
   // Keep the star shell centered on the camera (stars "at infinity").
@@ -472,17 +490,22 @@ if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
     object.tick(elapsedTime);
   }
 
-  // Update sim date HUD (throttled)
+  // Update sim date HUD (throttled).
+  // The ephemeris places every planet from its J2000 mean longitude, so the
+  // simulated clock must also start at the J2000 epoch (2000-01-01T12:00Z) —
+  // otherwise the shown date drifts from the actual planet positions.
+  // At ×1 speed one real second = 8 simulated hours (= 86400000/3 ms), so a
+  // 365-day Earth year takes 1095 real seconds.
   const nowMs = performance.now();
   if (nowMs - lastSimDateUpdate > 500) {
     lastSimDateUpdate = nowMs;
-    const simDate = new Date(Date.now() + (elapsedTime / 3) * 86400000);
+    const simDate = new Date(J2000_EPOCH + (elapsedTime / 3) * 86400000);
     const pad = (n: number) => String(n).padStart(2, "0");
     simDateEl.textContent = `Sim date · ${simDate.getUTCFullYear()}-${pad(
       simDate.getUTCMonth() + 1
     )}-${pad(simDate.getUTCDate())} ${pad(simDate.getUTCHours())}:${pad(
       simDate.getUTCMinutes()
-    )}`;
+    )} UTC`;
   }
 
   // Free-roam flight drives the fake camera directly.

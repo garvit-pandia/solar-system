@@ -19,7 +19,7 @@ const STEPS: TutorialStep[] = [
   },
   {
     title: "Ambient light",
-    body: "Toggles the fill light between bright day lighting and dimmed night lighting. This is the only ambient control.",
+    body: "Toggles the fill light between bright day lighting and dimmed night lighting. Fine-tune it with the Ambient Intensity slider in Settings.",
     target: "#btn-ambient",
   },
   {
@@ -49,7 +49,7 @@ const STEPS: TutorialStep[] = [
   },
   {
     title: "Free roam",
-    body: "The Free Roam button starts first-person flight — WASD to move, mouse to look, Space/C to rise and dive, Shift to boost. Press Esc to return to orbit; your position is remembered for next time.",
+    body: "The Free Roam button starts first-person flight — WASD to move, move the mouse over the 3D view to look, Space/C to rise and dive, Shift to boost. The toolbar stays clickable while flying; press Esc to return to orbit — your position is remembered for next time.",
     target: "#btn-fps",
   },
   {

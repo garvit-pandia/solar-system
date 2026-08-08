@@ -38,8 +38,13 @@ Built and maintained by [Garvit](https://github.com/garvit-pandia).
   Jupiter, Saturn and Neptune
 - **Hover tooltips, click-to-focus camera, orbit paths, bloom lighting,
   atmosphere and shadows**
+- **Sun-direction lighting** — the Sun actually lights the planets (day
+  sides, night terminators) instead of ambient-only flat shading
+- **Sim date on the J2000 epoch** — the HUD date always matches the planet
+  positions (1 Jan 2000 + elapsed time; pause/reverse/speed aware)
 - **Free-roam FPS flight** — first-person WASD flight that remembers your
-  position: exit and re-enter, and you continue where you left off
+  position: exit and re-enter, and you continue where you left off. The
+  toolbar stays clickable mid-flight (no pointer lock)
 - **Separate orbit-ring toggles** — one for the planets' rings around the
   Sun, one for the moons' rings around their planets
 - **Controls & features reference** — the help button explains every button

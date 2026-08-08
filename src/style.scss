@@ -1,8 +1,9 @@
+@use "./styles/tokens.scss";
 @use "./styles/animation.scss";
 @use "./styles/gui.scss";
 @use "./styles/toolbar.scss";
 @use "./styles/label.scss";
-@use "./styles//loading-screen.scss";
+@use "./styles/loading-screen.scss";
 @use "./styles/info-panel.scss";
 @use "./styles/tutorial.scss";
 @use "./styles/quiz.scss";

@@ -1,3 +1,5 @@
+@use "./tokens.scss" as *;
+
 /* Search & quick-nav palette (P0 #1) */
 #nav-palette {
   position: fixed;
@@ -26,14 +28,13 @@
   max-height: 62vh;
   display: flex;
   flex-direction: column;
-  background: rgba(13, 14, 28, 0.94);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 14px;
+  @extend %glass-panel;
+  background: $panel-bg-solid;
+  overflow: hidden;
+  font-family: $font;
   box-shadow:
     0 24px 64px rgba(0, 0, 0, 0.55),
     0 0 0 1px rgba(0, 0, 0, 0.4);
-  overflow: hidden;
-  font-family: "Trispace", sans-serif;
 }
 
 .palette-input-wrap {
@@ -41,7 +42,7 @@
   align-items: center;
   gap: 0.65rem;
   padding: 0.9rem 1.1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  border-bottom: $hairline;
 
   svg {
     flex: none;
@@ -54,22 +55,22 @@
     background: transparent;
     border: none;
     outline: none;
-    color: rgba(255, 255, 255, 0.95);
-    font-family: "Trispace", sans-serif;
+    color: $text-92;
+    font-family: $font;
     font-size: 0.95rem;
     letter-spacing: 0.02em;
 
     &::placeholder {
-      color: rgba(255, 255, 255, 0.35);
+      color: $text-45;
     }
   }
 
   kbd {
     flex: none;
-    font-family: "Trispace", sans-serif;
+    font-family: $font;
     font-size: 0.6rem;
-    color: rgba(255, 255, 255, 0.45);
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: $text-45;
+    border: $hairline;
     border-radius: 5px;
     padding: 0.18rem 0.45rem;
     background: rgba(255, 255, 255, 0.05);
@@ -88,7 +89,7 @@
     display: block;
     padding: 1.4rem 0.8rem;
     text-align: center;
-    color: rgba(255, 255, 255, 0.35);
+    color: $text-45;
     font-size: 0.75rem;
   }
 }
@@ -101,7 +102,7 @@
   padding: 0.55rem 0.8rem;
   border-radius: 9px;
   cursor: pointer;
-  color: rgba(255, 255, 255, 0.88);
+  color: $text-92;
   font-size: 0.85rem;
   letter-spacing: 0.02em;
 
@@ -110,14 +111,14 @@
   }
 
   &.selected {
-    background: rgba(201, 100, 66, 0.22);
-    outline: 1px solid rgba(201, 100, 66, 0.45);
+    background: $accent-fill;
+    outline: 1px solid $accent-border;
     color: #ffffff;
   }
 
   mark {
     background: none;
-    color: #ffd27a;
+    color: $accent-text;
     font-weight: 800;
   }
 }
@@ -127,9 +128,9 @@
   font-size: 0.58rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: rgba(255, 255, 255, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 999px;
+  color: $text-45;
+  border: $hairline;
+  border-radius: $radius-pill;
   padding: 0.16rem 0.55rem;
 }
 
@@ -138,8 +139,8 @@
   flex-wrap: wrap;
   gap: 0.5rem 1.1rem;
   padding: 0.55rem 1.1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.09);
-  color: rgba(255, 255, 255, 0.38);
+  border-top: $hairline;
+  color: $text-45;
   font-size: 0.6rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;

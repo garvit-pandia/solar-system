@@ -1,4 +1,8 @@
-/* Focus navigation pill — bottom centre: previous / current body / next */
+@use "./tokens.scss" as *;
+
+/* ============================================================
+   Focus navigation pill — bottom centre: prev / body / next
+   ============================================================ */
 
 .caption {
   display: flex;
@@ -10,11 +14,11 @@
   z-index: 20;
   gap: 0.5rem;
   padding: 0.42rem 0.7rem;
-  background: rgba(10, 12, 26, 0.66);
-  backdrop-filter: blur(16px) saturate(1.4);
-  -webkit-backdrop-filter: blur(16px) saturate(1.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
+  background: $panel-bg;
+  backdrop-filter: $panel-blur;
+  -webkit-backdrop-filter: $panel-blur;
+  border: $hairline;
+  border-radius: $radius-pill;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   color: white;
   user-select: none;
@@ -22,12 +26,12 @@
   p {
     min-width: 110px;
     text-align: center;
-    font-family: "Trispace", sans-serif;
+    font-family: $font;
     font-size: 0.78rem;
     font-weight: 500;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.92);
+    color: $text-92;
   }
 
   button {
@@ -37,8 +41,8 @@
     height: 34px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.07);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: rgba(255, 255, 255, 0.85);
+    border: $hairline;
+    color: $text-92;
     cursor: pointer;
     transition:
       background-color 0.15s ease,
@@ -67,8 +71,62 @@
   }
 }
 
-/* Keep the gui panel below the new toolbar (its own positioning is fine,
-   but prevent overlap on short viewports). */
+/* ============================================================
+   lil-gui settings panel — re-themed to the glass console
+   (lil-gui 0.18 exposes its palette via CSS custom properties)
+   ============================================================ */
+
 .lil-gui {
+  --background-color: #{$panel-bg-strong};
+  --text-color: #{$text-92};
+  --title-background-color: rgba(232, 163, 61, 0.12);
+  --title-text-color: #{$accent-text};
+  --widget-color: rgba(255, 255, 255, 0.06);
+  --hover-color: rgba(255, 255, 255, 0.14);
+  --focus-color: #{$accent};
+  --number-color: #{$accent-text};
+  --string-color: #{$text-72};
+  --font-family: "Trispace", sans-serif;
+  --font-size: 11px;
+  --input-font-size: 11px;
+  --width: 272px;
+  --widget-border-radius: 6px;
+  --widget-height: 24px;
+  --padding: 10px;
+  --spacing: 6px;
+  --name-width: 46%;
+  position: fixed;
+  top: 5.2rem;
+  right: 1rem;
   z-index: 21;
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: $hairline;
+  border-radius: $radius-panel;
+  box-shadow: $panel-shadow;
+  overflow: hidden;
+
+  .title {
+    letter-spacing: $tracking;
+    text-transform: uppercase;
+    font-size: 10px;
+    font-weight: 800;
+  }
+
+  .controller {
+    letter-spacing: 0.04em;
+  }
+
+  input[type="checkbox"] {
+    accent-color: $accent;
+  }
+
+  .slider {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  /* Close (fold) handle on the title bar */
+  .close-button {
+    color: $text-45;
+  }
 }

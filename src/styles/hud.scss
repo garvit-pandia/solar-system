@@ -1,19 +1,26 @@
+@use "./tokens.scss" as *;
+
+/* ============================================================
+   HUD chips — sim date (top-left) and planet hover tooltip
+   ============================================================ */
+
 #sim-date {
   position: fixed;
   top: 1rem;
   left: 1.5rem;
   z-index: 8;
-  font-family: "Trispace", sans-serif;
-  font-size: 0.7rem;
+  font-family: $font;
+  font-size: 0.68rem;
   font-weight: 200;
   letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.55);
-  background: rgba(15, 15, 30, 0.55);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 0.35rem 0.7rem;
+  color: $text-55;
+  background: $panel-bg;
+  backdrop-filter: $panel-blur;
+  -webkit-backdrop-filter: $panel-blur;
+  border: $hairline;
+  border-radius: $radius-pill;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  padding: 0.4rem 0.9rem;
   pointer-events: none;
   user-select: none;
 }
@@ -21,17 +28,19 @@
 #planet-tooltip {
   position: fixed;
   z-index: 12;
-  font-family: "Trispace", sans-serif;
-  font-size: 0.72rem;
+  font-family: $font;
+  font-size: 0.68rem;
   font-weight: 500;
-  letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.92);
-  background: rgba(15, 15, 30, 0.8);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 6px;
-  padding: 0.3rem 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: $text-92;
+  background: $panel-bg-strong;
+  backdrop-filter: $panel-blur;
+  -webkit-backdrop-filter: $panel-blur;
+  border: $hairline;
+  border-radius: $radius-input;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  padding: 0.32rem 0.7rem;
   display: none;
   pointer-events: none;
   transform: translate(10px, -50%);
