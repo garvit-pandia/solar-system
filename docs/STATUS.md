@@ -6,8 +6,8 @@ State: COMPLETE — all items implemented & verified (console assertions + visio
 ## What changed this round
 
 1. **Rebrand — fully Garvit's project**
-   - GitHub button now links to https://github.com/garvit-pandia (was KyleGough/solar-system)
-   - All Kyle Gough references removed (README, index.html, plan doc); loading screen credits Garvit
+   - GitHub button now links to https://github.com/garvit-pandia (upstream fork link removed)
+   - All upstream author references removed (README, index.html, plan doc); loading screen credits Garvit
    - README rewritten with current features + local screenshots (docs/screenshots/*.png)
 
 2. **True scale fixed (was: messy / out of proportion)**
