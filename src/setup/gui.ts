@@ -13,7 +13,7 @@ export const options = {
   reverse: false,
   speedPreset: "×0.125",
   trueScale: false,
-  showBelt: true,
+  showBelt: false,
   zangle: 0,
   yangle: 0,
 };

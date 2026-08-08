@@ -6,15 +6,22 @@ import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass";
 import { createEnvironmentMap } from "./setup/environment-map";
 import { createLights } from "./setup/lights";
-import { createSolarSystem } from "./setup/solar-system";
+import {
+  createSolarSystem,
+  applyTrueScale,
+  getWorldScale,
+  TRUE_SCALE_VIEW_RANGE,
+} from "./setup/solar-system";
 import { createGUI, options } from "./setup/gui";
 import { LAYERS } from "./constants";
 import { InfoPanel } from "./setup/info-panel";
 import { Tutorial } from "./setup/tutorial";
+import { HelpPanel } from "./setup/help-panel";
 import { Body } from "./setup/planetary-object";
 import { createAsteroidBelt } from "./setup/asteroid-belt";
 import { Quiz } from "./setup/quiz";
 import { CinematicTour } from "./setup/tour";
+import { FreeRoam } from "./setup/fly";
 
 THREE.ColorManagement.enabled = false;
 
@@ -68,6 +75,7 @@ window.addEventListener("resize", () => {
 });
 
 document.getElementById("btn-previous")?.addEventListener("click", () => {
+  if (fps.active) return;
   const index = planetNames.indexOf(options.focus);
   const newIndex = index === 0 ? planetNames.length - 1 : index - 1;
   const focus = planetNames[newIndex];
@@ -76,6 +84,7 @@ document.getElementById("btn-previous")?.addEventListener("click", () => {
 });
 
 document.getElementById("btn-next")?.addEventListener("click", () => {
+  if (fps.active) return;
   const index = (planetNames.indexOf(options.focus) + 1) % planetNames.length;
   const focus = planetNames[index];
   changeFocus(options.focus, focus);
@@ -88,59 +97,68 @@ const [solarSystem, planetNames] = createSolarSystem(scene);
 // Asteroid belt
 const asteroidBelt = createAsteroidBelt(scene);
 
-const TRUE_SCALE_BASE = 3959; // Earth radius in km — scale 1 == Earth
+const FAR_VIEW = 1000;
+const FAR_TRUE_SCALE = 2_000_000;
 
-const trueScaleFactor = (name: string): number => {
-  const body = solarSystem[name].mesh.userData.body as Body;
-  if (body.type === "ring" && body.orbits) {
-    return trueScaleFactor(body.orbits);
-  }
-  return body.radius / TRUE_SCALE_BASE;
+const setCameraFar = (far: number) => {
+  camera.far = far;
+  camera.updateProjectionMatrix();
+  fakeCamera.far = far;
+  fakeCamera.updateProjectionMatrix();
 };
 
-const updateCameraLimits = () => {
-  const object = solarSystem[options.focus];
-  const factor = options.trueScale ? trueScaleFactor(options.focus) : 1;
+const updateCameraLimits = (focusName: string) => {
+  const object = solarSystem[focusName];
+  const worldScale = options.trueScale ? getWorldScale(focusName) : 1;
   // The camera lives as a child of the focused body's mesh, so OrbitControls
-  // sees LOCAL units. The mesh scale provides the world-space factor.
+  // sees LOCAL units. The mesh scale provides the world-space factor — the
+  // local limits therefore stay valid in both scale modes.
   controls.minDistance = object.getMinDistance();
-  controls.maxDistance = Math.max(50 / factor, object.getMinDistance() * 6);
-  if (fakeCamera.position.length() < controls.minDistance) {
-    fakeCamera.position.set(
-      object.getMinDistance(),
-      object.getMinDistance() / 3,
-      0
-    );
-  }
+  controls.maxDistance = Math.max(
+    50,
+    (options.trueScale ? TRUE_SCALE_VIEW_RANGE : 50) / worldScale
+  );
 };
 
 const applyScaleMode = (enabled: boolean) => {
-  for (const name in solarSystem) {
-    const object = solarSystem[name];
-    object.mesh.scale.setScalar(enabled ? trueScaleFactor(name) : 1);
-  }
+  applyTrueScale(solarSystem, enabled);
+  asteroidBelt.setTrueScale(enabled);
   // The giant true-scale Sun blows out the bloom halo into a muddy blob —
   // tone the bloom down while true scale is active.
   bloomPass.strength = enabled ? 0.15 : 0.75;
+  // The true-scale system spans ~700,000 world units (Neptune's orbit);
+  // extend the far plane and speed up zooming so the scale change is usable.
+  setCameraFar(enabled ? FAR_TRUE_SCALE : FAR_VIEW);
+  controls.zoomSpeed = enabled ? 2.0 : 1.0;
+  // Orbit paths act as the reference grid in true scale — without them the
+  // planets are sub-pixel dots lost in the void. Restore the user's choice
+  // when switching back to view mode.
+  if (enabled) {
+    if (!options.showPaths) {
+      options.showPaths = true;
+      for (const name in solarSystem) {
+        const object = solarSystem[name];
+        if (object.path) object.path.visible = true;
+      }
+    }
+  }
+  updateCameraLimits(options.focus);
   // Snap the camera onto the focused body's orbit so the scale change is
-  // immediately visible (the mesh scale also scales the camera's local frame).
+  // immediately visible.
   const object = solarSystem[options.focus];
   const minDistance = object.getMinDistance();
   fakeCamera.position.set(minDistance, minDistance / 3, 0);
-  updateCameraLimits();
 };
 
 const changeFocus = (oldFocus: string, newFocus: string) => {
   solarSystem[oldFocus].mesh.remove(camera);
   solarSystem[newFocus].mesh.add(camera);
   const object = solarSystem[newFocus];
-  const factor = options.trueScale ? trueScaleFactor(newFocus) : 1;
   const minDistance = object.getMinDistance();
-  // Local-space clamps: OrbitControls measures fakeCamera.position (local to
-  // the parent mesh), while the mesh scale converts them to world units.
-  controls.minDistance = minDistance;
-  controls.maxDistance = Math.max(50 / factor, minDistance * 6);
+  // Orbit centre = the body's local origin (its centre).
+  controls.target.set(0, 0, 0);
   fakeCamera.position.set(minDistance, minDistance / 3, 0);
+  updateCameraLimits(newFocus);
   solarSystem[oldFocus].labels.hidePOI();
   solarSystem[newFocus].labels.showPOI();
   (document.querySelector(".caption p") as HTMLElement).innerHTML = newFocus;
@@ -148,7 +166,7 @@ const changeFocus = (oldFocus: string, newFocus: string) => {
 
 // Camera
 const aspect = sizes.width / sizes.height;
-const camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(75, aspect, 0.1, FAR_VIEW);
 camera.position.set(0, 20, 0);
 solarSystem["Sun"].mesh.add(camera);
 
@@ -199,7 +217,7 @@ const infoPanel = new InfoPanel();
 const simDateEl = document.getElementById("sim-date") as HTMLElement;
 let lastSimDateUpdate = 0;
 
-// Quiz mode — answer by clicking planets in the 3D scene
+// Quiz mode — answer by clicking the chips or the planets in the 3D scene
 const quiz = new Quiz();
 quiz.init();
 
@@ -214,6 +232,7 @@ const tour = new CinematicTour({
   getCurrentFocus: () => options.focus,
 });
 document.getElementById("btn-tour")?.addEventListener("click", () => {
+  if (fps.active) fps.exit();
   // The tour flies in world coordinates, which conflicts with true-scale's
   // scaled local camera frame — fall back to view scale for the flight.
   if (options.trueScale) {
@@ -223,6 +242,47 @@ document.getElementById("btn-tour")?.addEventListener("click", () => {
   tour.start();
 });
 
+// Free-roam first-person flight mode
+const fps = new FreeRoam({
+  camera: fakeCamera,
+  canvas,
+  getWorldScale: () => getWorldScale(options.focus),
+  onEnter: () => {
+    tour.stop();
+    controls.enabled = false;
+    // Detach both cameras from the focused body so the world-space flight
+    // math is not multiplied by the body's scale.
+    const mesh = solarSystem[options.focus].mesh;
+    mesh.remove(fakeCamera);
+    mesh.remove(camera);
+    scene.add(fakeCamera);
+    scene.add(camera);
+    document.body.classList.add("fps-active");
+  },
+  onExit: () => {
+    document.body.classList.remove("fps-active");
+    // Re-attach the cameras to the focused body and resume orbit control.
+    const mesh = solarSystem[options.focus].mesh;
+    scene.remove(fakeCamera);
+    scene.remove(camera);
+    mesh.add(fakeCamera);
+    mesh.add(camera);
+    const minDistance = solarSystem[options.focus].getMinDistance();
+    controls.target.set(0, 0, 0);
+    fakeCamera.position.set(minDistance, minDistance / 3, 0);
+    controls.enabled = true;
+    updateCameraLimits(options.focus);
+  },
+});
+fps.attach();
+document.getElementById("btn-fps")?.addEventListener("click", () => {
+  if (fps.active) {
+    fps.exit();
+  } else {
+    fps.enter();
+  }
+});
+
 // First-visit tutorial — show only after the loading screen is dismissed
 const tutorial = new Tutorial();
 window.addEventListener(
@@ -230,6 +290,9 @@ window.addEventListener(
   () => tutorial.init(),
   { once: true }
 );
+
+// Help panel (features & controls reference)
+new HelpPanel();
 
 // Click a planet to focus it and view its facts
 const raycaster = new THREE.Raycaster();
@@ -241,6 +304,7 @@ canvas.addEventListener("pointerdown", (e) => {
 });
 
 canvas.addEventListener("pointerup", (e) => {
+  if (fps.active) return; // pointer-lock flight: no planet picking
   if (Math.hypot(e.clientX - pointerDown.x, e.clientY - pointerDown.y) > 6) return;
   pointer.x = (e.clientX / sizes.width) * 2 - 1;
   pointer.y = -(e.clientY / sizes.height) * 2 + 1;
@@ -276,7 +340,7 @@ canvas.addEventListener("pointerup", () => {
 });
 
 canvas.addEventListener("pointermove", (e) => {
-  if (pointerIsDown) return;
+  if (fps.active || pointerIsDown) return;
   const now = performance.now();
   if (now - lastHoverCheck < 50) return;
   lastHoverCheck = now;
@@ -317,11 +381,17 @@ if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
     infoPanel,
     quiz,
     tour,
+    fps,
+    applyTrueScale,
+    getWorldScale,
   };
 }
 
 (function tick() {
-  elapsedTime += clock.getDelta() * options.speed;
+  // Clamp the raw delta so a background tab (huge delta on return) or a
+  // frame hitch cannot teleport the simulation date and planet positions.
+  const dt = Math.min(clock.getDelta(), 0.1);
+  elapsedTime += dt * options.speed;
 
   asteroidBelt.tick(elapsedTime);
 
@@ -343,11 +413,19 @@ if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
     )}`;
   }
 
+  // Free-roam flight drives the fake camera directly.
+  if (fps.active) {
+    fps.update(dt);
+  }
+
   // Update camera
   camera.copy(fakeCamera);
 
-  // Update controls
-  controls.update();
+  // Update controls (skipped during free-roam — its clamps would fight the
+  // unconstrained flight path)
+  if (!fps.active) {
+    controls.update();
+  }
 
   // Update labels
   const currentBody = solarSystem[options.focus];

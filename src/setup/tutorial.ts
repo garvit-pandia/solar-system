@@ -42,6 +42,16 @@ const STEPS: TutorialStep[] = [
     body: "Click any planet to fly to it and open its facts card. Click empty space to close it.",
     target: "canvas.webgl",
   },
+  {
+    title: "Free roam",
+    body: "The rocket button starts first-person flight — WASD to move, mouse to look, Space/C to rise and dive, Shift to boost. Press Esc to return to orbit.",
+    target: "#btn-fps",
+  },
+  {
+    title: "Controls & features",
+    body: "The help button opens a full reference explaining every toolbar button and simulation control.",
+    target: "#btn-help",
+  },
 ];
 
 export class Tutorial {

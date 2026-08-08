@@ -41,13 +41,31 @@
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.15);
     font-size: 0.8rem;
+    font-family: inherit;
     text-align: center;
-    cursor: default;
+    cursor: pointer;
+    color: white;
+    transition: background 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.16);
+      border-color: rgba(255, 255, 255, 0.35);
+    }
+
+    &:focus-visible {
+      outline: 2px solid #ffc850;
+      outline-offset: 2px;
+    }
   }
 
   .quiz-option.correct-option {
     border-color: #ffc850;
     background: rgba(255, 200, 80, 0.15);
+  }
+
+  .quiz-option.wrong-option {
+    border-color: #ff7b72;
+    background: rgba(255, 123, 114, 0.12);
   }
 
   #quiz-feedback {

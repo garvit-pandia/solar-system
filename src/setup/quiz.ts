@@ -130,17 +130,34 @@ export class Quiz {
   handlePlanetClick = (body: Body | null): void => {
     if (!this.active || this.lock) return;
 
-    const current = this.questions[this.index];
-    if (!current) return;
-
     if (body === null) {
-      this.feedbackEl.textContent = "Click a planet in the 3D scene!";
+      this.feedbackEl.textContent =
+        "Pick an option below, or click a planet in the 3D scene!";
       this.feedbackEl.classList.remove("correct", "wrong");
       this.feedbackEl.classList.add("hint");
       return;
     }
 
-    if (body.name === current.answer) {
+    this.answerWith(body.name);
+  };
+
+  /** Answer with a planet name — from a clickable chip or a 3D click. */
+  private answerWith = (name: string): void => {
+    if (!this.active || this.lock) return;
+
+    const current = this.questions[this.index];
+    if (!current) return;
+
+    const selected = this.optionsEl.querySelectorAll(".quiz-option");
+    selected.forEach((el) => {
+      if (el.textContent === name) {
+        el.classList.add(
+          name === current.answer ? "correct-option" : "wrong-option"
+        );
+      }
+    });
+
+    if (name === current.answer) {
       this.score += 1;
       this.feedbackEl.textContent = "Correct!";
       this.feedbackEl.classList.remove("wrong", "hint");
@@ -178,9 +195,11 @@ export class Quiz {
 
     this.optionsEl.innerHTML = "";
     for (const name of options) {
-      const chip = document.createElement("div");
+      const chip = document.createElement("button");
+      chip.type = "button";
       chip.className = "quiz-option";
       chip.textContent = name;
+      chip.addEventListener("click", () => this.answerWith(name));
       this.optionsEl.appendChild(chip);
     }
 

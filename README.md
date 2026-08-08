@@ -1,26 +1,37 @@
 # Solar System Model
 
-3D model of the solar system allowing traversal of all the planets. Provides labels showcasing points of interest on certain planets such as _Olympus Mons_ on Mars. This model was created using Three.js and is currently serving as a tool to enhance my learning whilst progressing through Three.js journey.
+An interactive 3D model of the solar system, built with Three.js. Traverse the
+planets, inspect points of interest (Olympus Mons, Apollo 11, the Great Red
+Spot…), run the simulation at any speed, fly between worlds in free-roam mode,
+and test yourself with the built-in quiz.
 
-## Current features
+Built and maintained by [Garvit](https://github.com/garvit-pandia).
 
-- Orbits
-- Textures
-- Loading screen
-- Environment
-- Lighting and Shadows
-- Moons
-- POI labels
-- Custom controls
-- Orbit paths
-- Sun bloom effect
+## Features
 
-## Planned changes
-
-- [ ] Earth night time texture
-- [ ] Planet information panel
-- [ ] Accuracy of distances
-- [ ] Improve shadow quality
+- **Orbits & moons** — the eight planets plus the Moon, Ganymede, Titan,
+  Callisto, Io, Europa and Triton, all in motion
+- **True-scale mode** — real sizes and real distances (1 unit = Earth's
+  radius); the Sun becomes 109× Earth and space gets properly vast
+- **Free-roam FPS flight** — pointer-lock mouse look, WASD movement, boost,
+  adjustable speed
+- **Time controls** — pause, reverse, speed presets (×0.125 … ×100) and a
+  fine-grained speed slider, with a live simulated-date HUD
+- **Asteroid belt** — procedurally generated main belt (three rock shapes,
+  varied colours and sizes, faint dust disc) between Mars and Jupiter
+- **Real ephemeris** — planets start at their actual positions based on
+  J2000 mean longitudes
+- **Facts cards** — radius, day length, year length, temperature, gravity,
+  moons, distance and a fun fact for every body
+- **Quiz mode** — six questions, answered by clicking the on-screen options
+  or the planets themselves
+- **Cinematic auto-tour** — a guided flight from the Sun to Neptune
+- **Points of interest** — labelled surface features on Earth's Moon, Mars,
+  Jupiter, Saturn and Neptune
+- **Hover tooltips, click-to-focus camera, orbit paths, bloom lighting,
+  atmosphere and shadows**
+- **Controls & features reference** — the help button explains every button
+  and simulation control
 
 ## Setup
 
@@ -40,20 +51,23 @@ npm run build
 
 ## Screenshots
 
-![Sun](https://github.com/KyleGough/solar-system/assets/24881448/194f78d5-b35b-4661-bdae-85fd06f7a94f)
-![Earth](https://github.com/KyleGough/solar-system/assets/24881448/ca9ca06e-36a7-46f8-91cc-5942df1e3906)
-![Moon](https://github.com/KyleGough/solar-system/assets/24881448/d22fcdad-d7bc-4bf1-b026-9967317b1a69)
-![Mars](https://github.com/KyleGough/solar-system/assets/24881448/7b6806d4-d8ff-400e-8405-afb8f189acbc)
-![Neptune](https://github.com/KyleGough/solar-system/assets/24881448/a5677621-40ab-4aa5-a14e-f928010e1806)
+![Sun](docs/screenshots/sun.png)
+![Earth](docs/screenshots/earth.png)
+![Saturn](docs/screenshots/saturn.png)
+![Mars](docs/screenshots/mars.png)
+![True scale](docs/screenshots/true-scale.png)
 
-## Resources
+## Data sources
 
-- **The Sun, Jupiter, Saturn, Uranus, and Neptune** - [https://www.solarsystemscope.com/textures/](https://www.solarsystemscope.com/textures/)
-- **Terrestrial Planets** - [https://planetpixelemporium.com/planets.html](https://planetpixelemporium.com/planets.html)
-- **Moon** - [https://svs.gsfc.nasa.gov/4720](https://svs.gsfc.nasa.gov/4720)
-- **Ganymede** - [https://www.deviantart.com/askaniy/art/Ganymede-Texture-Map-11K-808732114](https://www.deviantart.com/askaniy/art/Ganymede-Texture-Map-11K-808732114)
-- **Titan** - [https://planet-texture-maps.fandom.com/wiki/Titan](https://planet-texture-maps.fandom.com/wiki/Titan)
-- **Callisto** - [http://bjj.mmedia.is/data/callisto/](http://bjj.mmedia.is/data/callisto/)
-- **Io** - [https://phys.org/news/2014-12-solar-worlds-distant-exoplanets.html](https://phys.org/news/2014-12-solar-worlds-distant-exoplanets.html)
-- **Europa** - [https://www.johnstonsarchive.net/spaceart/cylmaps.html](https://www.johnstonsarchive.net/spaceart/cylmaps.html)
-- **Triton** - [https://www.go-astronomy.com/planets/neptune-moon-triton.htm](https://www.go-astronomy.com/planets/neptune-moon-triton.htm)
+- **Physical data (radii, distances, periods)** — NASA/JPL planetary fact
+  sheets (mean radii, semi-major axes)
+- **The Sun, Jupiter, Saturn, Uranus, and Neptune textures** -
+  [https://www.solarsystemscope.com/textures/](https://www.solarsystemscope.com/textures/)
+- **Terrestrial Planets textures** - [https://planetpixelemporium.com/planets.html](https://planetpixelemporium.com/planets.html)
+- **Moon texture** - [https://svs.gsfc.nasa.gov/4720](https://svs.gsfc.nasa.gov/4720)
+- **Ganymede texture** - [https://www.deviantart.com/askaniy/art/Ganymede-Texture-Map-11K-808732114](https://www.deviantart.com/askaniy/art/Ganymede-Texture-Map-11K-808732114)
+- **Titan texture** - [https://planet-texture-maps.fandom.com/wiki/Titan](https://planet-texture-maps.fandom.com/wiki/Titan)
+- **Callisto texture** - [http://bjj.mmedia.is/data/callisto/](http://bjj.mmedia.is/data/callisto/)
+- **Io texture** - [https://phys.org/news/2014-12-solar-worlds-distant-exoplanets.html](https://phys.org/news/2014-12-solar-worlds-distant-exoplanets.html)
+- **Europa texture** - [https://www.johnstonsarchive.net/spaceart/cylmaps.html](https://www.johnstonsarchive.net/spaceart/cylmaps.html)
+- **Triton texture** - [https://www.go-astronomy.com/planets/neptune-moon-triton.htm](https://www.go-astronomy.com/planets/neptune-moon-triton.htm)

@@ -80,6 +80,24 @@
       background: #ffd97a;
     }
   }
+
+  #btn-guide2 {
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 0.8rem;
+    cursor: pointer;
+    margin-left: 0.6rem;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+  }
 }
 
 #spotlight {

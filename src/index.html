@@ -67,9 +67,10 @@
       </button>
       <a
         id="btn-github"
-        href="https://github.com/KyleGough/solar-system"
+        href="https://github.com/garvit-pandia"
         target="_blank"
-        data-tooltip="Source code"
+        rel="noopener"
+        data-tooltip="Garvit's GitHub"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -150,6 +151,14 @@
           </g>
         </svg>
       </button>
+      <button id="btn-fps" aria-label="Free roam" data-tooltip="Free roam (FPS)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+          <g>
+            <path style="fill:#0f0f1e" d="M12 24a12 12 0 1 1 12-12 12.013 12.013 0 0 1-12 12zm0-22a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2z" />
+            <path style="fill:#ffffff" d="M12 4.5 9.8 11.2 3 13.5l6.8 2.2L12 22l2.2-6.3L21 13.5l-6.8-2.3z" />
+          </g>
+        </svg>
+      </button>
       <button id="btn-settings" data-tooltip="Open settings">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -213,6 +222,7 @@
       </p>
       <div class="welcome-actions">
         <button id="btn-guide">Quick guide</button>
+        <button id="btn-guide2">Controls & features</button>
       </div>
     </div>
 
@@ -233,6 +243,76 @@
 
     <div id="sim-date"></div>
     <div id="planet-tooltip"></div>
+    <div id="fps-hint">
+      <span class="fps-title">Free roam</span>
+      <span>WASD move · Mouse look · Space / C up &amp; down · Shift boost · Scroll speed</span>
+      <span class="fps-speed">Speed <span id="fps-speed-value"></span></span>
+      <span class="fps-exit">Click the rocket button or press Esc to return to orbit</span>
+    </div>
+
+    <div id="help-panel">
+      <div class="help-card">
+        <button id="btn-help-close" class="skip" aria-label="Close help">✕</button>
+        <h2>Controls &amp; Features</h2>
+
+        <section>
+          <h3>Camera &amp; navigation</h3>
+          <ul>
+            <li><b>Drag</b> — orbit the view around the focused body.</li>
+            <li><b>Scroll</b> — zoom in / out.</li>
+            <li><b>Click a planet</b> — fly to it and open its facts card (click empty space to close).</li>
+            <li><b>Hover</b> — shows the body's name.</li>
+            <li><b>‹ › buttons</b> — hop between planets.</li>
+            <li><b>Rocket button</b> — free-roam FPS flight: WASD to move, mouse to look, Space/C up &amp; down, Shift boost, scroll to change speed, Esc to exit.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>Simulation controls (gear button)</h3>
+          <ul>
+            <li><b>Ambient Intensity</b> — brightness of the fill light (0–1).</li>
+            <li><b>Show Moons</b> — show or hide all moons.</li>
+            <li><b>Run</b> — pause / resume the simulation clock.</li>
+            <li><b>Speed Preset</b> — quick time speeds: ×0.125, ×1, ×10, ×100.</li>
+            <li><b>Reverse Time</b> — run the clock backwards.</li>
+            <li><b>Speed</b> — fine-grained speed slider (0.05× to 200×).</li>
+            <li><b>True Scale</b> — real sizes <i>and</i> real distances (1 unit = Earth's radius). The Sun becomes 109× Earth and space becomes vast — use the planet buttons or clicks to travel.</li>
+            <li><b>Asteroid Belt</b> — the main belt between Mars and Jupiter.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>Toolbar buttons</h3>
+          <ul>
+            <li><b>▶ Tour</b> — cinematic flight Sun → Neptune.</li>
+            <li><b>? Help</b> — this reference.</li>
+            <li><b>GitHub</b> — the author's profile.</li>
+            <li><b>Light</b> — bright / dim ambient lighting.</li>
+            <li><b>Pin</b> — points of interest (Olympus Mons, Apollo 11…).</li>
+            <li><b>Ring</b> — orbit path lines.</li>
+            <li><b>Quiz</b> — 6 questions; pick an option below the question or click the planet in 3D.</li>
+            <li><b>Gear</b> — the full simulation control panel.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>Sim date</h3>
+          <p>
+            Top-left HUD shows the simulated date. It advances 8 hours per real
+            second at ×1 speed, respects pause and reverse, and matches the
+            planets' orbital motion.
+          </p>
+        </section>
+
+        <div class="help-actions">
+          <button id="btn-help-tour">Guided tour</button>
+        </div>
+        <footer>
+          Built by <a href="https://github.com/garvit-pandia" target="_blank" rel="noopener">Garvit</a> ·
+          data from NASA / JPL fact sheets
+        </footer>
+      </div>
+    </div>
 
     <div id="quiz-card">
       <button id="btn-quiz-close" class="skip" aria-label="Close quiz">✕</button>

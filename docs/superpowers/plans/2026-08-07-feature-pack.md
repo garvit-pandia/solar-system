@@ -127,7 +127,7 @@ Per feature: console-assert via `window.__solar` + vision-model screenshot (user
 ## Original pending items (from handoff)
 - Commit tutorial.scss (Skip legibility + #spotlight-controls pointer-events fix) + package-lock.json
 - Clean .playwright-mcp/, root PNGs, .superpowers/ (stop brainstorm server first)
-- Attribution: loading screen "created by Kyle Gough" → "Garvit" (deploy prereq)
+- Attribution: loading screen credits Garvit (done; GitHub link updated)
 - Deploy: check gh auth + git remote; if absent → build + script + instructions for user
 
 ## Commits (planned)
