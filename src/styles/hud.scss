@@ -1,0 +1,48 @@
+#sim-date {
+  position: fixed;
+  top: 1rem;
+  left: 1.5rem;
+  z-index: 8;
+  font-family: "Trispace", sans-serif;
+  font-size: 0.7rem;
+  font-weight: 200;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.55);
+  background: rgba(15, 15, 30, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.35rem 0.7rem;
+  pointer-events: none;
+  user-select: none;
+}
+
+#planet-tooltip {
+  position: fixed;
+  z-index: 12;
+  font-family: "Trispace", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(15, 15, 30, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  display: none;
+  pointer-events: none;
+  transform: translate(10px, -50%);
+  white-space: nowrap;
+}
+
+/* Quiz overlay — display toggling lives here; visual styling lives in quiz.scss */
+#quiz-card {
+  display: none;
+
+  &.visible {
+    display: block;
+  }
+}

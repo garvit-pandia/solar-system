@@ -11,7 +11,12 @@
     "textures": {
       "map": "./textures/sun.jpg"
     },
-    "temp": 5500
+    "temp": 5500,
+    "gravity": 274,
+    "moons": 0,
+    "distanceAU": 0,
+    "escapeVelocity": 617.5,
+    "funFact": "The Sun holds 99.8% of all mass in the solar system."
   },
   {
     "name": "Mercury",
@@ -27,7 +32,12 @@
       "map": "./textures/mercury.jpg",
       "bump": "./textures/mercury-bump.jpg"
     },
-    "temp": 167
+    "temp": 167,
+    "gravity": 3.7,
+    "moons": 0,
+    "distanceAU": 0.39,
+    "escapeVelocity": 4.25,
+    "funFact": "A year on Mercury lasts just 88 days, but a single day lasts longer than its year."
   },
   {
     "name": "Venus",
@@ -43,7 +53,12 @@
       "map": "./textures/venus.jpg",
       "bump": "./textures/venus-bump.jpg"
     },
-    "temp": 464
+    "temp": 464,
+    "gravity": 8.87,
+    "moons": 0,
+    "distanceAU": 0.72,
+    "escapeVelocity": 10.36,
+    "funFact": "Venus spins backwards, so the Sun rises in the west."
   },
   {
     "name": "Earth",
@@ -62,7 +77,12 @@
       "atmosphere": "./textures/earth-clouds.jpg",
       "atmosphereAlpha": "./textures/earth-clouds-alpha.jpg"
     },
-    "temp": 15
+    "temp": 15,
+    "gravity": 9.81,
+    "moons": 1,
+    "distanceAU": 1,
+    "escapeVelocity": 11.19,
+    "funFact": "The only known world with liquid-water oceans and life."
   },
   {
     "name": "Moon",
@@ -98,7 +118,12 @@
         "z": 0.67
       }
     ],
-    "temp": -20
+    "temp": -20,
+    "gravity": 1.62,
+    "moons": 0,
+    "distanceAU": 0.0026,
+    "escapeVelocity": 2.38,
+    "funFact": "The Moon drifts about 3.8 cm farther from Earth every year."
   },
   {
     "name": "Mars",
@@ -145,7 +170,12 @@
         "z": -0.1
       }
     ],
-    "temp": -63
+    "temp": -63,
+    "gravity": 3.71,
+    "moons": 2,
+    "distanceAU": 1.52,
+    "escapeVelocity": 5.03,
+    "funFact": "Home to Olympus Mons, the tallest volcano in the solar system."
   },
   {
     "name": "Jupiter",
@@ -167,7 +197,12 @@
         "z": -0.41
       }
     ],
-    "temp": -110
+    "temp": -110,
+    "gravity": 24.79,
+    "moons": 95,
+    "distanceAU": 5.2,
+    "escapeVelocity": 59.5,
+    "funFact": "Its Great Red Spot is a storm larger than Earth that has raged for centuries."
   },
   {
     "name": "Saturn",
@@ -189,7 +224,12 @@
         "z": 1.57
       }
     ],
-    "temp": -140
+    "temp": -140,
+    "gravity": 10.44,
+    "moons": 146,
+    "distanceAU": 9.54,
+    "escapeVelocity": 35.5,
+    "funFact": "Its rings are made of billions of chunks of ice and rock."
   },
   {
     "name": "Uranus",
@@ -204,7 +244,12 @@
     "textures": {
       "map": "./textures/uranus.jpg"
     },
-    "temp": -195
+    "temp": -195,
+    "gravity": 8.87,
+    "moons": 28,
+    "distanceAU": 19.19,
+    "escapeVelocity": 21.3,
+    "funFact": "Uranus rolls around the Sun on its side, tilted 98 degrees."
   },
   {
     "name": "Neptune",
@@ -226,7 +271,12 @@
         "z": -0.18
       }
     ],
-    "temp": -200
+    "temp": -200,
+    "gravity": 11.15,
+    "moons": 16,
+    "distanceAU": 30.07,
+    "escapeVelocity": 23.5,
+    "funFact": "Neptune has the fastest winds in the solar system, over 2,000 km/h."
   },
   {
     "name": "Rings of Saturn",
@@ -240,7 +290,12 @@
     "tilt": 26.73,
     "textures": {
       "map": "./textures/saturn-ring.png"
-    }
+    },
+    "gravity": 0,
+    "moons": 0,
+    "distanceAU": 9.54,
+    "escapeVelocity": 0,
+    "funFact": "Saturn's rings span 280,000 km yet are often less than a kilometre thick."
   },
   {
     "name": "Ganymede",
@@ -255,7 +310,12 @@
     "textures": {
       "map": "./textures/ganymede.jpg"
     },
-    "temp": -163
+    "temp": -163,
+    "gravity": 1.43,
+    "moons": 0,
+    "distanceAU": 5.2,
+    "escapeVelocity": 2.74,
+    "funFact": "The largest moon in the solar system — bigger than the planet Mercury."
   },
   {
     "name": "Titan",
@@ -270,7 +330,12 @@
     "textures": {
       "map": "./textures/titan.webp"
     },
-    "temp": -179
+    "temp": -179,
+    "gravity": 1.35,
+    "moons": 0,
+    "distanceAU": 9.54,
+    "escapeVelocity": 2.64,
+    "funFact": "The only moon with a thick atmosphere, full of orange methane haze."
   },
   {
     "name": "Callisto",
@@ -285,7 +350,12 @@
     "textures": {
       "map": "./textures/callisto.jpg"
     },
-    "temp": -139
+    "temp": -139,
+    "gravity": 1.24,
+    "moons": 0,
+    "distanceAU": 5.2,
+    "escapeVelocity": 2.44,
+    "funFact": "One of the most heavily cratered worlds in the solar system."
   },
   {
     "name": "Io",
@@ -300,7 +370,12 @@
     "textures": {
       "map": "./textures/io.jpg"
     },
-    "temp": -130
+    "temp": -130,
+    "gravity": 1.8,
+    "moons": 0,
+    "distanceAU": 5.2,
+    "escapeVelocity": 2.56,
+    "funFact": "The most volcanically active world known — over 400 active volcanoes."
   },
   {
     "name": "Europa",
@@ -315,7 +390,12 @@
     "textures": {
       "map": "./textures/europa.jpg"
     },
-    "temp": -160
+    "temp": -160,
+    "gravity": 1.31,
+    "moons": 0,
+    "distanceAU": 5.2,
+    "escapeVelocity": 2.02,
+    "funFact": "Its icy crust hides a salty ocean that may harbour life."
   },
   {
     "name": "Triton",
@@ -330,6 +410,11 @@
     "textures": {
       "map": "./textures/triton.jpg"
     },
-    "temp": -235
+    "temp": -235,
+    "gravity": 0.78,
+    "moons": 0,
+    "distanceAU": 30.07,
+    "escapeVelocity": 1.46,
+    "funFact": "Triton orbits Neptune backwards, a captured Kuiper Belt object."
   }
 ]

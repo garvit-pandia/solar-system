@@ -1,4 +1,5 @@
 import { PlanetaryObject } from "./planetary-object";
+import { initialOrbitAngle } from "./ephemeris";
 import planetData from "../planets.json";
 import { Body } from "./planetary-object";
 import { setTextureCount } from "./textures";
@@ -23,6 +24,13 @@ export const createSolarSystem = (
     }
 
     const object = new PlanetaryObject(planet);
+
+    if (planet.type === "planet") {
+      const angle = initialOrbitAngle(planet.name);
+      if (angle !== undefined) {
+        object.rng = angle;
+      }
+    }
 
     solarSystem[name] = object;
 

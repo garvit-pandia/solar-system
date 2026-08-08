@@ -19,7 +19,7 @@
         <h1>Solar System Model</h1>
         <p>
           <span id="createdBy">created by</span>
-          <span id="name">Kyle Gough</span>
+          <span id="name">Garvit</span>
         </p>
         <div id="loader-progress">
           <div id="loader-text">
@@ -49,6 +49,14 @@
     </div>
     <canvas class="webgl"></canvas>
     <div class="btn-group">
+      <button id="btn-tour" aria-label="Auto tour" data-tooltip="Auto tour">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+          <g>
+            <path style="fill:#0f0f1e" d="M12 24a12 12 0 1 1 12-12 12.013 12.013 0 0 1-12 12zm0-22a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2z" />
+            <path style="fill:#ffffff" d="M9.5 7.5v9l8-4.5z" />
+          </g>
+        </svg>
+      </button>
       <button id="btn-help" aria-label="Help" data-tooltip="Help">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
           <g>
@@ -132,6 +140,16 @@
           </g>
         </svg>
       </button>
+      <button id="btn-quiz" aria-label="Quiz" data-tooltip="Quiz">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+          <g>
+            <path style="fill:#0f0f1e" d="M12 24a12 12 0 1 1 12-12 12.013 12.013 0 0 1-12 12zm0-22a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2z" />
+            <path style="fill:#ffffff" d="M9.5 12.5 11 14l3.5-4" />
+            <path style="fill:#ffffff" d="M9 16.5h6v1.5H9z" />
+            <path style="fill:#ffffff" d="M12 4.5a5 5 0 0 0-3.2 8.85V15h1.4v-1.3a5 5 0 0 0 3.6 0V15h1.4v-1.65A5 5 0 0 0 12 4.5zm0 1.8a3.2 3.2 0 1 1-3.2 3.2 3.2 3.2 0 0 1 3.2-3.2z" />
+          </g>
+        </svg>
+      </button>
       <button id="btn-settings" data-tooltip="Open settings">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -180,7 +198,11 @@
         <div class="info-row"><span>Day</span><span id="info-day"></span></div>
         <div class="info-row"><span>Year</span><span id="info-year"></span></div>
         <div class="info-row"><span>Temp</span><span id="info-temp"></span></div>
+        <div class="info-row"><span>Gravity</span><span id="info-gravity"></span></div>
+        <div class="info-row"><span>Moons</span><span id="info-moons"></span></div>
+        <div class="info-row"><span>Distance</span><span id="info-distance"></span></div>
       </div>
+      <div class="info-fact" id="info-fact"></div>
     </div>
     <div id="welcome-card">
       <button id="btn-skip-welcome" class="skip">Skip</button>
@@ -208,6 +230,30 @@
     </div>
 
     <div id="tooltip"></div>
+
+    <div id="sim-date"></div>
+    <div id="planet-tooltip"></div>
+
+    <div id="quiz-card">
+      <button id="btn-quiz-close" class="skip" aria-label="Close quiz">✕</button>
+      <h2>Planet Quiz</h2>
+      <p id="quiz-question"></p>
+      <div id="quiz-options"></div>
+      <p id="quiz-feedback"></p>
+      <div class="quiz-meta">
+        <span id="quiz-progress"></span>
+        <span id="quiz-score"></span>
+      </div>
+      <div id="quiz-result" style="display: none">
+        <p id="quiz-final-score"></p>
+        <p id="quiz-best"></p>
+        <div class="quiz-actions">
+          <button id="btn-quiz-again">Play again</button>
+          <button id="btn-quiz-done">Done</button>
+        </div>
+      </div>
+    </div>
+
     <script type="module" src="./script.ts"></script>
   </body>
 </html>

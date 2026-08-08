@@ -1,1 +1,7 @@
-node_modules.superpowers/
+node_modules/
+dist/
+.playwright-mcp/
+.superpowers/
+welcome-card.png
+welcome-over-scene.png
+spotlight-step1.png

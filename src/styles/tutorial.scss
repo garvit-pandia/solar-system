@@ -44,9 +44,9 @@
     right: 0.6rem;
     background: none;
     border: none;
-    color: rgba(255, 255, 255, 0.75);
+    color: rgba(255, 255, 255, 0.8);
     font-family: inherit;
-    font-size: 0.7rem;
+    font-size: 0.78rem;
     cursor: pointer;
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -93,6 +93,10 @@
 
   &.visible {
     opacity: 1;
+
+    #spotlight-controls {
+      pointer-events: auto;
+    }
   }
 
   #spotlight-highlight {
@@ -143,6 +147,7 @@
     gap: 1rem;
     align-items: center;
     font-family: "Trispace", sans-serif;
+    pointer-events: none;
 
     button {
       background: rgba(255, 255, 255, 0.08);

@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
 import { SolarSystem } from "./solar-system";
+import { AsteroidBelt } from "./asteroid-belt";
 import { LAYERS } from "../constants";
 import * as THREE from "three";
 
@@ -9,15 +10,28 @@ export const options = {
   focus: "Sun",
   clock: true,
   speed: 0.125,
+  reverse: false,
+  speedPreset: "×0.125",
+  trueScale: false,
+  showBelt: true,
   zangle: 0,
   yangle: 0,
+};
+
+const SPEED_PRESETS: Record<string, number> = {
+  "×0.125": 0.125,
+  "×1": 1,
+  "×10": 10,
+  "×100": 100,
 };
 
 export const createGUI = (
   ambientLight: THREE.AmbientLight,
   solarSystem: SolarSystem,
   clock: THREE.Clock,
-  camera: THREE.Camera
+  camera: THREE.Camera,
+  belt: AsteroidBelt | null,
+  onTrueScale: (value: boolean) => void
 ) => {
   const gui = new GUI();
 
@@ -46,8 +60,41 @@ export const createGUI = (
       value ? clock.start() : clock.stop();
     });
 
-  // Control the simulation speed
-  gui.add(options, "speed", 0.1, 20, 0.1).name("Speed");
+  // Time presets
+  gui
+    .add(options, "speedPreset", Object.keys(SPEED_PRESETS))
+    .name("Speed Preset")
+    .onChange((preset: string) => {
+      const magnitude = SPEED_PRESETS[preset] ?? 0.125;
+      options.speed = options.reverse ? -magnitude : magnitude;
+    });
+
+  // Reverse time
+  gui
+    .add(options, "reverse")
+    .name("Reverse Time")
+    .onChange((reverse: boolean) => {
+      options.speed = Math.abs(options.speed) * (reverse ? -1 : 1);
+    });
+
+  // Fine-grained simulation speed
+  gui.add(options, "speed", 0.05, 200, 0.05).name("Speed");
+
+  // True scale mode
+  gui
+    .add(options, "trueScale")
+    .name("True Scale")
+    .onChange((value: boolean) => onTrueScale(value));
+
+  // Asteroid belt
+  if (belt) {
+    gui
+      .add(options, "showBelt")
+      .name("Asteroid Belt")
+      .onChange((value: boolean) => {
+        belt.mesh.visible = value;
+      });
+  }
 
   gui.hide();
 

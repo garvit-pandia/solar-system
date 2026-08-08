@@ -7,6 +7,10 @@ export class InfoPanel {
   private dayEl: HTMLElement;
   private yearEl: HTMLElement;
   private tempEl: HTMLElement;
+  private gravityEl: HTMLElement;
+  private moonsEl: HTMLElement;
+  private distanceEl: HTMLElement;
+  private factEl: HTMLElement;
   isOpen = false;
 
   constructor() {
@@ -16,6 +20,10 @@ export class InfoPanel {
     this.dayEl = document.getElementById("info-day") as HTMLElement;
     this.yearEl = document.getElementById("info-year") as HTMLElement;
     this.tempEl = document.getElementById("info-temp") as HTMLElement;
+    this.gravityEl = document.getElementById("info-gravity") as HTMLElement;
+    this.moonsEl = document.getElementById("info-moons") as HTMLElement;
+    this.distanceEl = document.getElementById("info-distance") as HTMLElement;
+    this.factEl = document.getElementById("info-fact") as HTMLElement;
 
     document
       .getElementById("btn-info-close")
@@ -32,6 +40,16 @@ export class InfoPanel {
     this.yearEl.textContent = `${Math.abs(body.period).toLocaleString()} days`;
     this.tempEl.textContent =
       body.temp !== undefined ? `${body.temp.toLocaleString()}°C` : "—";
+    this.gravityEl.textContent = body.gravity
+      ? body.gravity.toLocaleString() + " m/s²"
+      : "—";
+    this.moonsEl.textContent = String(body.moons ?? "—");
+    this.distanceEl.textContent =
+      body.distanceAU !== undefined
+        ? body.distanceAU.toLocaleString() + " AU"
+        : "—";
+    this.factEl.textContent = body.funFact ?? "";
+    this.factEl.style.display = body.funFact ? "block" : "none";
     this.element.classList.add("visible");
     this.isOpen = true;
   }

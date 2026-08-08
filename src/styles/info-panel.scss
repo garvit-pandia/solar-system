@@ -3,7 +3,7 @@
   left: 1.5rem;
   bottom: 1.5rem;
   z-index: 9;
-  width: 230px;
+  width: 260px;
   padding: 1rem 1.1rem;
   background: rgba(15, 15, 30, 0.75);
   backdrop-filter: blur(10px);
@@ -60,5 +60,15 @@
     span:first-child {
       color: rgba(255, 255, 255, 0.55);
     }
+  }
+
+  .info-fact {
+    margin-top: 0.6rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    font-size: 0.72rem;
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.65);
+    line-height: 1.5;
   }
 }

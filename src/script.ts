@@ -12,6 +12,9 @@ import { LAYERS } from "./constants";
 import { InfoPanel } from "./setup/info-panel";
 import { Tutorial } from "./setup/tutorial";
 import { Body } from "./setup/planetary-object";
+import { createAsteroidBelt } from "./setup/asteroid-belt";
+import { Quiz } from "./setup/quiz";
+import { CinematicTour } from "./setup/tour";
 
 THREE.ColorManagement.enabled = false;
 
@@ -54,6 +57,8 @@ window.addEventListener("resize", () => {
   // Update camera
   camera.aspect = sizes.width / sizes.height;
   camera.updateProjectionMatrix();
+  fakeCamera.aspect = sizes.width / sizes.height;
+  fakeCamera.updateProjectionMatrix();
 
   // Update renderers
   renderer.setSize(sizes.width, sizes.height);
@@ -80,11 +85,61 @@ document.getElementById("btn-next")?.addEventListener("click", () => {
 // Solar system
 const [solarSystem, planetNames] = createSolarSystem(scene);
 
+// Asteroid belt
+const asteroidBelt = createAsteroidBelt(scene);
+
+const TRUE_SCALE_BASE = 3959; // Earth radius in km — scale 1 == Earth
+
+const trueScaleFactor = (name: string): number => {
+  const body = solarSystem[name].mesh.userData.body as Body;
+  if (body.type === "ring" && body.orbits) {
+    return trueScaleFactor(body.orbits);
+  }
+  return body.radius / TRUE_SCALE_BASE;
+};
+
+const updateCameraLimits = () => {
+  const object = solarSystem[options.focus];
+  const factor = options.trueScale ? trueScaleFactor(options.focus) : 1;
+  // The camera lives as a child of the focused body's mesh, so OrbitControls
+  // sees LOCAL units. The mesh scale provides the world-space factor.
+  controls.minDistance = object.getMinDistance();
+  controls.maxDistance = Math.max(50 / factor, object.getMinDistance() * 6);
+  if (fakeCamera.position.length() < controls.minDistance) {
+    fakeCamera.position.set(
+      object.getMinDistance(),
+      object.getMinDistance() / 3,
+      0
+    );
+  }
+};
+
+const applyScaleMode = (enabled: boolean) => {
+  for (const name in solarSystem) {
+    const object = solarSystem[name];
+    object.mesh.scale.setScalar(enabled ? trueScaleFactor(name) : 1);
+  }
+  // The giant true-scale Sun blows out the bloom halo into a muddy blob —
+  // tone the bloom down while true scale is active.
+  bloomPass.strength = enabled ? 0.15 : 0.75;
+  // Snap the camera onto the focused body's orbit so the scale change is
+  // immediately visible (the mesh scale also scales the camera's local frame).
+  const object = solarSystem[options.focus];
+  const minDistance = object.getMinDistance();
+  fakeCamera.position.set(minDistance, minDistance / 3, 0);
+  updateCameraLimits();
+};
+
 const changeFocus = (oldFocus: string, newFocus: string) => {
   solarSystem[oldFocus].mesh.remove(camera);
   solarSystem[newFocus].mesh.add(camera);
-  const minDistance = solarSystem[newFocus].getMinDistance();
+  const object = solarSystem[newFocus];
+  const factor = options.trueScale ? trueScaleFactor(newFocus) : 1;
+  const minDistance = object.getMinDistance();
+  // Local-space clamps: OrbitControls measures fakeCamera.position (local to
+  // the parent mesh), while the mesh scale converts them to world units.
   controls.minDistance = minDistance;
+  controls.maxDistance = Math.max(50 / factor, minDistance * 6);
   fakeCamera.position.set(minDistance, minDistance / 3, 0);
   solarSystem[oldFocus].labels.hidePOI();
   solarSystem[newFocus].labels.showPOI();
@@ -140,6 +195,34 @@ bloomComposer.addPass(bloomPass);
 // Planet info panel
 const infoPanel = new InfoPanel();
 
+// Sim-date HUD
+const simDateEl = document.getElementById("sim-date") as HTMLElement;
+let lastSimDateUpdate = 0;
+
+// Quiz mode — answer by clicking planets in the 3D scene
+const quiz = new Quiz();
+quiz.init();
+
+// Cinematic auto-tour
+const tour = new CinematicTour({
+  camera,
+  fakeCamera,
+  controls,
+  solarSystem,
+  changeFocus,
+  infoPanel,
+  getCurrentFocus: () => options.focus,
+});
+document.getElementById("btn-tour")?.addEventListener("click", () => {
+  // The tour flies in world coordinates, which conflicts with true-scale's
+  // scaled local camera frame — fall back to view scale for the flight.
+  if (options.trueScale) {
+    applyScaleMode(false);
+    options.trueScale = false;
+  }
+  tour.start();
+});
+
 // First-visit tutorial — show only after the loading screen is dismissed
 const tutorial = new Tutorial();
 window.addEventListener(
@@ -164,12 +247,51 @@ canvas.addEventListener("pointerup", (e) => {
   raycaster.setFromCamera(pointer, camera);
   const hits = raycaster.intersectObjects(scene.children, true);
   const body = findClickedBody(hits);
+  if (quiz.isActive()) {
+    quiz.handlePlanetClick(body);
+    return;
+  }
   if (body) {
     changeFocus(options.focus, body.name);
     options.focus = body.name;
     infoPanel.open(body);
   } else {
     infoPanel.close();
+  }
+});
+
+// Hover a planet to reveal its name
+const planetTooltip = document.getElementById("planet-tooltip") as HTMLElement;
+const hoverRaycaster = new THREE.Raycaster();
+const hoverPointer = new THREE.Vector2();
+let pointerIsDown = false;
+let lastHoverCheck = 0;
+
+canvas.addEventListener("pointerdown", () => {
+  pointerIsDown = true;
+});
+
+canvas.addEventListener("pointerup", () => {
+  pointerIsDown = false;
+});
+
+canvas.addEventListener("pointermove", (e) => {
+  if (pointerIsDown) return;
+  const now = performance.now();
+  if (now - lastHoverCheck < 50) return;
+  lastHoverCheck = now;
+  hoverPointer.x = (e.clientX / sizes.width) * 2 - 1;
+  hoverPointer.y = -(e.clientY / sizes.height) * 2 + 1;
+  hoverRaycaster.setFromCamera(hoverPointer, camera);
+  const hits = hoverRaycaster.intersectObjects(scene.children, true);
+  const body = findClickedBody(hits);
+  if (body) {
+    planetTooltip.textContent = body.name;
+    planetTooltip.style.display = "block";
+    planetTooltip.style.left = `${e.clientX}px`;
+    planetTooltip.style.top = `${e.clientY}px`;
+  } else {
+    planetTooltip.style.display = "none";
   }
 });
 
@@ -180,14 +302,45 @@ let elapsedTime = 0;
 fakeCamera.layers.enable(LAYERS.POILabel);
 
 // GUI
-createGUI(ambientLight, solarSystem, clock, fakeCamera);
+createGUI(ambientLight, solarSystem, clock, fakeCamera, asteroidBelt, applyScaleMode);
+
+// Debug hook for automated verification (dev builds only)
+if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
+  (window as unknown as { __solar?: unknown }).__solar = {
+    THREE,
+    scene,
+    camera,
+    fakeCamera,
+    controls,
+    solarSystem,
+    options,
+    infoPanel,
+    quiz,
+    tour,
+  };
+}
 
 (function tick() {
   elapsedTime += clock.getDelta() * options.speed;
 
+  asteroidBelt.tick(elapsedTime);
+
   // Update the solar system objects
   for (const object of Object.values(solarSystem)) {
     object.tick(elapsedTime);
+  }
+
+  // Update sim date HUD (throttled)
+  const nowMs = performance.now();
+  if (nowMs - lastSimDateUpdate > 500) {
+    lastSimDateUpdate = nowMs;
+    const simDate = new Date(Date.now() + (elapsedTime / 3) * 86400000);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    simDateEl.textContent = `Sim date · ${simDate.getUTCFullYear()}-${pad(
+      simDate.getUTCMonth() + 1
+    )}-${pad(simDate.getUTCDate())} ${pad(simDate.getUTCHours())}:${pad(
+      simDate.getUTCMinutes()
+    )}`;
   }
 
   // Update camera

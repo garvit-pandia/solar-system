@@ -19,6 +19,11 @@ export interface Body {
   labels?: PointOfInterest[];
   traversable: boolean;
   offset?: number;
+  gravity?: number;
+  moons?: number;
+  distanceAU?: number;
+  escapeVelocity?: number;
+  funFact?: string;
 }
 
 interface TexturePaths {
@@ -84,6 +89,10 @@ export class PlanetaryObject {
 
     if (this.orbits) {
       this.path = createPath(this.distance);
+      // Orbit paths must never intercept raycasts — otherwise clicks near a
+      // parent body's orbit resolve to the wrong body (e.g. the Moon's path
+      // circle around Earth captures every click while the camera orbits Earth).
+      this.path.raycast = () => {};
     }
 
     if (this.atmosphere.map) {
