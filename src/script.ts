@@ -13,7 +13,14 @@ import {
   getWorldScale,
   TRUE_SCALE_VIEW_RANGE,
 } from "./setup/solar-system";
-import { createGUI, options } from "./setup/gui";
+import {
+  createGUI,
+  options,
+  applyPathVisibility,
+  syncToolbar,
+  AMBIENT_BRIGHT,
+  AMBIENT_DIM,
+} from "./setup/gui";
 import { LAYERS } from "./constants";
 import { InfoPanel } from "./setup/info-panel";
 import { Tutorial } from "./setup/tutorial";
@@ -130,6 +137,10 @@ const updateCameraLimits = (focusName: string) => {
   );
 };
 
+// When true-scale forces the planet orbit rings on as a reference grid,
+// this remembers the user's choice so it can be restored on exit.
+let savedPlanetPaths: boolean | null = null;
+
 const applyScaleMode = (enabled: boolean) => {
   applyTrueScale(solarSystem, enabled);
   asteroidBelt.setTrueScale(enabled);
@@ -141,18 +152,20 @@ const applyScaleMode = (enabled: boolean) => {
   // extend the far plane and speed up zooming so the scale change is usable.
   setCameraFar(enabled ? FAR_TRUE_SCALE : FAR_VIEW);
   controls.zoomSpeed = enabled ? 2.0 : 1.0;
-  // Orbit paths act as the reference grid in true scale — without them the
-  // planets are sub-pixel dots lost in the void. Restore the user's choice
-  // when switching back to view mode.
+  // Orbit rings act as the reference grid in true scale — without them the
+  // planets are sub-pixel dots lost in the void. Force the PLANET rings on
+  // for the duration, then restore the user's choice when switching back.
   if (enabled) {
-    if (!options.showPaths) {
-      options.showPaths = true;
-      for (const name in solarSystem) {
-        const object = solarSystem[name];
-        if (object.path) object.path.visible = true;
-      }
+    if (savedPlanetPaths === null) {
+      savedPlanetPaths = options.showPlanetPaths;
+      options.showPlanetPaths = true;
     }
+  } else if (savedPlanetPaths !== null) {
+    options.showPlanetPaths = savedPlanetPaths;
+    savedPlanetPaths = null;
   }
+  applyPathVisibility(solarSystem);
+  syncToolbar();
   updateCameraLimits(options.focus);
   // Snap the camera onto the focused body's orbit so the scale change is
   // immediately visible.
@@ -272,15 +285,25 @@ const fps = new FreeRoam({
   },
   onExit: () => {
     document.body.classList.remove("fps-active");
-    // Re-attach the cameras to the focused body and resume orbit control.
     const mesh = solarSystem[options.focus].mesh;
+    // Save the world-space flight pose so exiting free roam continues
+    // exactly where the user quit (instead of snapping to the default
+    // orbit camera position).
+    const worldPos = fakeCamera.getWorldPosition(new THREE.Vector3());
+    const worldQuat = fakeCamera.getWorldQuaternion(new THREE.Quaternion());
+    // Re-attach the cameras to the focused body and resume orbit control.
     scene.remove(fakeCamera);
     scene.remove(camera);
     mesh.add(fakeCamera);
     mesh.add(camera);
-    const minDistance = solarSystem[options.focus].getMinDistance();
+    // Convert the saved world pose into the (possibly scaled) local frame
+    // of the focused body's mesh.
+    fakeCamera.position.copy(mesh.worldToLocal(worldPos));
+    const meshWorldQuat = new THREE.Quaternion();
+    mesh.getWorldQuaternion(meshWorldQuat);
+    fakeCamera.quaternion.copy(meshWorldQuat.invert().premultiply(worldQuat));
+    camera.copy(fakeCamera);
     controls.target.set(0, 0, 0);
-    fakeCamera.position.set(minDistance, minDistance / 3, 0);
     controls.enabled = true;
     updateCameraLimits(options.focus);
   },
@@ -377,7 +400,7 @@ let elapsedTime = 0;
 fakeCamera.layers.enable(LAYERS.POILabel);
 
 // GUI
-createGUI(ambientLight, solarSystem, clock, fakeCamera, asteroidBelt, kuiperBelt, applyScaleMode);
+createGUI(solarSystem, clock, fakeCamera, asteroidBelt, kuiperBelt, applyScaleMode);
 
 // Search & quick-nav palette (Ctrl+K / magnifier / number keys)
 const palette = new NavPalette({
@@ -426,6 +449,13 @@ if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
   // frame hitch cannot teleport the simulation date and planet positions.
   const dt = Math.min(clock.getDelta(), 0.1);
   elapsedTime += dt * options.speed;
+
+  // Smooth ambient transitions when the toolbar day/night toggle is used.
+  const ambientTarget = options.ambientOn ? AMBIENT_BRIGHT : AMBIENT_DIM;
+  if (ambientLight.intensity !== ambientTarget) {
+    ambientLight.intensity +=
+      (ambientTarget - ambientLight.intensity) * Math.min(1, dt * 6);
+  }
 
   // Keep the star shell centered on the camera (stars "at infinity").
   starfield.update(

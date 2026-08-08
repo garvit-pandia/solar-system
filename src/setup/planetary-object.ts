@@ -106,7 +106,10 @@ export class PlanetaryObject {
     this.mesh = this.createMesh();
     this.mesh.userData.body = body;
 
-    if (this.orbits) {
+    // Orbit paths: planets & dwarf planets (around the Sun) and moons
+    // (around their host). Rings have no orbit (distance 0 → a degenerate
+    // zero-radius circle), so they get no path at all.
+    if (this.orbits && this.type !== "ring") {
       this.path = createPath(this.distance);
       // Orbit paths must never intercept raycasts — otherwise clicks near a
       // parent body's orbit resolve to the wrong body (e.g. the Moon's path

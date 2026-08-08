@@ -57,8 +57,15 @@ export class FreeRoam {
     if (this.active) return;
     this.active = true;
 
-    this.yaw = 0;
-    this.pitch = 0;
+    // Resume the look direction the user had when they last exited free
+    // roam (the camera is a scene-root child while flying, so its local
+    // quaternion IS the world orientation). Falls back to 0,0 on first use.
+    this.euler.setFromQuaternion(this.camera.quaternion, "YXZ");
+    this.yaw = this.euler.y;
+    this.pitch = Math.max(
+      -PITCH_LIMIT,
+      Math.min(PITCH_LIMIT, this.euler.x)
+    );
     this.speedMultiplier = 1;
     this.keys.clear();
 

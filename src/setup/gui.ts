@@ -5,7 +5,12 @@ import { LAYERS } from "../constants";
 import * as THREE from "three";
 
 export const options = {
-  showPaths: false,
+  // Display toggles (toolbar)
+  showPlanetPaths: true,
+  showMoonPaths: true,
+  showLabels: true,
+  ambientOn: true,
+  // Simulation controls (GUI panel)
   showMoons: true,
   focus: "Sun",
   clock: true,
@@ -19,6 +24,11 @@ export const options = {
   yangle: 0,
 };
 
+/** Ambient intensity in "day" mode (toolbar toggle on). */
+export const AMBIENT_BRIGHT = 0.55;
+/** Ambient intensity in "night" mode (toolbar toggle off). */
+export const AMBIENT_DIM = 0.06;
+
 const SPEED_PRESETS: Record<string, number> = {
   "×0.125": 0.125,
   "×1": 1,
@@ -26,8 +36,39 @@ const SPEED_PRESETS: Record<string, number> = {
   "×100": 100,
 };
 
+/**
+ * Apply the current orbit-ring visibility to every body's path.
+ *
+ * Rings are grouped by what the body orbits: planets and dwarf planets
+ * orbit the Sun (one toggle), moons orbit their host body (another toggle).
+ * Rings (e.g. Saturn's) are skipped — they have no orbit path.
+ */
+export const applyPathVisibility = (solarSystem: SolarSystem): void => {
+  for (const name in solarSystem) {
+    const object = solarSystem[name];
+    if (!object.path) continue;
+    const isPlanetPath = object.orbits === "Sun";
+    object.path.visible = isPlanetPath
+      ? options.showPlanetPaths
+      : options.showMoonPaths;
+  }
+};
+
+/** Reflect the current option state on the toolbar toggle buttons. */
+export const syncToolbar = (): void => {
+  const setPressed = (id: string, on: boolean) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.setAttribute("aria-pressed", String(on));
+    el.classList.toggle("is-active", on);
+  };
+  setPressed("btn-planet-paths", options.showPlanetPaths);
+  setPressed("btn-moon-paths", options.showMoonPaths);
+  setPressed("btn-ambient", options.ambientOn);
+  setPressed("btn-labels", options.showLabels);
+};
+
 export const createGUI = (
-  ambientLight: THREE.AmbientLight,
   solarSystem: SolarSystem,
   clock: THREE.Clock,
   camera: THREE.Camera,
@@ -39,7 +80,8 @@ export const createGUI = (
 
   gui.title("Simulation Controls");
 
-  gui.add(ambientLight, "intensity", 0, 1, 0.01).name("Ambient Intensity");
+  // Note: ambient lighting deliberately has NO control here — the toolbar
+  // Ambient button is the single, canonical control (day/night).
 
   // Toggle moons
   gui
@@ -110,30 +152,43 @@ export const createGUI = (
 
   gui.hide();
 
-  // Toggle ambient lights
+  // --- Toolbar wiring -------------------------------------------------
+
+  // Orbit rings of the planets & dwarf planets around the Sun
+  document.getElementById("btn-planet-paths")?.addEventListener("click", () => {
+    options.showPlanetPaths = !options.showPlanetPaths;
+    applyPathVisibility(solarSystem);
+    syncToolbar();
+  });
+
+  // Orbit rings of the moons around their host planets
+  document.getElementById("btn-moon-paths")?.addEventListener("click", () => {
+    options.showMoonPaths = !options.showMoonPaths;
+    applyPathVisibility(solarSystem);
+    syncToolbar();
+  });
+
+  // Ambient day/night toggle — the ONLY ambient control. The actual
+  // intensity animates smoothly in the main loop's tick (see script.ts).
   document.getElementById("btn-ambient")?.addEventListener("click", () => {
-    ambientLight.intensity = ambientLight.intensity === 0.1 ? 0.5 : 0.1;
+    options.ambientOn = !options.ambientOn;
+    syncToolbar();
   });
 
-  // Toggle labels
+  // Points of interest. The camera passed in is the fakeCamera — toggling
+  // it propagates to the render camera via the per-frame copy() (which
+  // copies layers). Toggling the render camera alone would be overwritten.
   document.getElementById("btn-labels")?.addEventListener("click", () => {
+    options.showLabels = !options.showLabels;
     camera.layers.toggle(LAYERS.POILabel);
-  });
-
-  // Toggle paths
-  document.getElementById("btn-paths")?.addEventListener("click", () => {
-    options.showPaths = !options.showPaths;
-
-    for (const name in solarSystem) {
-      const object = solarSystem[name];
-      if (object.path) {
-        object.path.visible = options.showPaths;
-      }
-    }
+    syncToolbar();
   });
 
   // Toggle GUI panel
   document.getElementById("btn-settings")?.addEventListener("click", () => {
     gui.show(gui._hidden);
   });
+
+  applyPathVisibility(solarSystem);
+  syncToolbar();
 };

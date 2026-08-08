@@ -38,6 +38,10 @@ Built and maintained by [Garvit](https://github.com/garvit-pandia).
   Jupiter, Saturn and Neptune
 - **Hover tooltips, click-to-focus camera, orbit paths, bloom lighting,
   atmosphere and shadows**
+- **Free-roam FPS flight** — first-person WASD flight that remembers your
+  position: exit and re-enter, and you continue where you left off
+- **Separate orbit-ring toggles** — one for the planets' rings around the
+  Sun, one for the moons' rings around their planets
 - **Controls & features reference** — the help button explains every button
   and simulation control
 

@@ -48,161 +48,70 @@
       </div>
     </div>
     <canvas class="webgl"></canvas>
-    <div class="btn-group">
-      <button id="btn-search" aria-label="Search" data-tooltip="Search (Ctrl+K)">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-          <g>
-            <path style="fill:#0f0f1e" d="M12 24a12 12 0 1 1 12-12 12.013 12.013 0 0 1-12 12zm0-22a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2z" />
-            <path style="fill:#ffffff" d="m15.6 14.3.9.9-1.3 1.3-.9-.9a5.9 5.9 0 1 1 1.3-1.3zm-3.4.9a4.1 4.1 0 1 0-4.1-4.1 4.1 4.1 0 0 0 4.1 4.1z" />
-          </g>
-        </svg>
+    <div class="toolbar" role="toolbar" aria-label="Controls">
+      <button id="btn-search" class="tool-btn" aria-label="Search" data-tooltip="Search (Ctrl+K)">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20.5 20.5-4.6-4.6"/></svg>
+        <span class="label">Search</span>
       </button>
-      <button id="btn-tour" aria-label="Auto tour" data-tooltip="Auto tour">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-          <g>
-            <path style="fill:#0f0f1e" d="M12 24a12 12 0 1 1 12-12 12.013 12.013 0 0 1-12 12zm0-22a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2z" />
-            <path style="fill:#ffffff" d="M9.5 7.5v9l8-4.5z" />
-          </g>
-        </svg>
+      <span class="toolbar-sep" aria-hidden="true"></span>
+      <button id="btn-planet-paths" class="tool-btn" aria-pressed="true" data-tooltip="Orbit rings of the planets around the Sun">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.6"/><ellipse cx="12" cy="12" rx="9.3" ry="3.6"/></svg>
+        <span class="label">Planet Orbits</span>
       </button>
-      <button id="btn-help" aria-label="Help" data-tooltip="Help">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-          <g>
-            <path style="fill:#0f0f1e" d="M12 24a12 12 0 1 1 12-12 12.013 12.013 0 0 1-12 12zm0-22a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2z" />
-            <text x="12" y="16" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">?</text>
-          </g>
-        </svg>
+      <button id="btn-moon-paths" class="tool-btn" aria-pressed="true" data-tooltip="Orbit rings of the moons around their planets">
+        <svg viewBox="0 0 24 24"><circle cx="8" cy="12" r="2.3"/><circle cx="17" cy="12" r="4.3"/><ellipse cx="17" cy="12" rx="2.9" ry="1.3"/></svg>
+        <span class="label">Moon Orbits</span>
+      </button>
+      <span class="toolbar-sep" aria-hidden="true"></span>
+      <button id="btn-ambient" class="tool-btn" aria-pressed="true" data-tooltip="Ambient light — day / night">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg>
+        <span class="label">Ambient</span>
+      </button>
+      <button id="btn-labels" class="tool-btn" aria-pressed="true" data-tooltip="Points of interest on planets">
+        <svg viewBox="0 0 24 24"><path d="M12 21.2S5.6 16 5.6 10.9a6.4 6.4 0 0 1 12.8 0C18.4 16 12 21.2 12 21.2z"/><circle cx="12" cy="10.6" r="2.4"/></svg>
+        <span class="label">Labels</span>
+      </button>
+      <span class="toolbar-sep" aria-hidden="true"></span>
+      <button id="btn-fps" class="tool-btn" aria-label="Free roam" data-tooltip="Free roam (FPS) — exit resumes where you left off">
+        <svg viewBox="0 0 24 24"><path d="M12.2 15.7c-3.2-1.2-5.1-4.2-4.6-8.1l3.2-3.6a9.6 9.6 0 0 1 8.5-1.6 9.6 9.6 0 0 1-1.6 8.5l-3.6 3.2c-1.3 1-2.9 1.6-3.9 1.6z"/><circle cx="14.9" cy="9.1" r="1.35"/><path d="M9.6 9.9 4.9 13.2l1.9.8-.8 2.3 2.3-.8.8 1.9 3.3-4.7"/></svg>
+        <span class="label">Free Roam</span>
+      </button>
+      <button id="btn-tour" class="tool-btn" data-tooltip="Auto tour">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10.2 8.6v6.8l5.6-3.4z"/></svg>
+        <span class="label">Tour</span>
+      </button>
+      <button id="btn-quiz" class="tool-btn" data-tooltip="Planet quiz">
+        <svg viewBox="0 0 24 24"><path d="M9.2 17.2h5.6"/><path d="M10.2 20h3.6"/><path d="M12 3.2a6.2 6.2 0 0 0-3.7 11.2c.7.6 1.1 1.4 1.1 2.3h5.2c0-.9.4-1.7 1.1-2.3A6.2 6.2 0 0 0 12 3.2z"/></svg>
+        <span class="label">Quiz</span>
+      </button>
+      <span class="toolbar-sep" aria-hidden="true"></span>
+      <button id="btn-settings" class="tool-btn" data-tooltip="Simulation settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span class="label">Settings</span>
+      </button>
+      <button id="btn-help" class="tool-btn" data-tooltip="Help">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.8 9.3a2.3 2.3 0 1 1 3.3 2.1c-.8.4-1.2 1-1.2 1.9"/><path d="M12 16.9h.01"/></svg>
+        <span class="label">Help</span>
       </button>
       <a
         id="btn-github"
+        class="tool-btn"
         href="https://github.com/garvit-pandia"
         target="_blank"
         rel="noopener"
         data-tooltip="Garvit's GitHub"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-        >
-          <g>
-            <path
-              d="M12 24a12 12 0 1 1 12-12 12.013 12.013 0 0 1-12 12zm0-22a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2z"
-            />
-            <path
-              d="M9.293 16.707 4.586 12l4.707-4.707 1.414 1.414L7.414 12l3.293 3.293-1.414 1.414zM14.707 16.707l-1.414-1.414L16.586 12l-3.293-3.293 1.414-1.414L19.414 12l-4.707 4.707z"
-            />
-          </g>
-        </svg>
+        <svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+        <span class="label">GitHub</span>
       </a>
-      <button id="btn-ambient" data-tooltip="Toggle ambient light">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-        >
-          <g>
-            <path
-              d="M12 24a12 12 0 1 1 12-12 12.013 12.013 0 0 1-12 12zm0-22a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2z"
-            />
-            <path
-              d="M12 16a4 4 0 1 1 4-4 4 4 0 0 1-4 4zm0-6a2 2 0 1 0 2 2 2 2 0 0 0-2-2zM11 5h2v2h-2zM11 17h2v2h-2zM17 11h2v2h-2zM5 11h2v2H5zM6 7h2v2H6zM16 7h2v2h-2zM6 15h2v2H6zM16 15h2v2h-2z"
-            />
-          </g>
-        </svg>
-      </button>
-      <button id="btn-labels" data-tooltip="Toggle labels">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-        >
-          <g>
-            <path
-              d="M12 24a12 12 0 1 1 12-12 12.013 12.013 0 0 1-12 12zm0-22a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2z"
-            />
-            <path
-              d="m12 19.414-.707-.707C10.751 18.166 6 13.318 6 10a6 6 0 0 1 12 0c0 3.318-4.751 8.166-5.293 8.707zM12 6a4 4 0 0 0-4 4c0 1.654 2.225 4.622 4 6.553 1.774-1.933 4-4.9 4-6.553a4 4 0 0 0-4-4z"
-            />
-            <path d="M11 8h2v2h-2z" />
-          </g>
-        </svg>
-      </button>
-      <button id="btn-paths" data-tooltip="Toggle orbit paths">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-        >
-          <g>
-            <path
-              d="M12 24a12 12 0 1 1 12-12 12.013 12.013 0 0 1-12 12zm0-22a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2z"
-            />
-            <path
-              d="m7.091 16.91 1.964-7.856 7.854-1.964-1.964 7.856zM10.7 10.7l-.864 3.457L13.3 13.3l.864-3.457z"
-            />
-            <path d="m9.171 10.586 1.414-1.414 4.242 4.242-1.414 1.414z" />
-          </g>
-        </svg>
-      </button>
-      <button id="btn-quiz" aria-label="Quiz" data-tooltip="Quiz">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-          <g>
-            <path style="fill:#0f0f1e" d="M12 24a12 12 0 1 1 12-12 12.013 12.013 0 0 1-12 12zm0-22a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2z" />
-            <path style="fill:#ffffff" d="M9.5 12.5 11 14l3.5-4" />
-            <path style="fill:#ffffff" d="M9 16.5h6v1.5H9z" />
-            <path style="fill:#ffffff" d="M12 4.5a5 5 0 0 0-3.2 8.85V15h1.4v-1.3a5 5 0 0 0 3.6 0V15h1.4v-1.65A5 5 0 0 0 12 4.5zm0 1.8a3.2 3.2 0 1 1-3.2 3.2 3.2 3.2 0 0 1 3.2-3.2z" />
-          </g>
-        </svg>
-      </button>
-      <button id="btn-fps" aria-label="Free roam" data-tooltip="Free roam (FPS)">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-          <g>
-            <path style="fill:#0f0f1e" d="M12 24a12 12 0 1 1 12-12 12.013 12.013 0 0 1-12 12zm0-22a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2z" />
-            <path style="fill:#ffffff" d="M12 4.5 9.8 11.2 3 13.5l6.8 2.2L12 22l2.2-6.3L21 13.5l-6.8-2.3z" />
-          </g>
-        </svg>
-      </button>
-      <button id="btn-settings" data-tooltip="Open settings">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-        >
-          <g>
-            <path
-              d="M12 24a12 12 0 1 1 12-12 12.013 12.013 0 0 1-12 12zm0-22a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2z"
-            />
-            <path
-              d="M12 17a5 5 0 1 1 5-5 5.006 5.006 0 0 1-5 5zm0-8a3 3 0 1 0 3 3 3 3 0 0 0-3-3z"
-            />
-            <path
-              d="M11 5h2v3h-2zM11 16h2v3h-2zM16 11h3v2h-3zM5 11h3v2H5zM14.293 8.293l2-2 1.414 1.414-2 2zM6.293 7.707l1.414-1.414 2 2-1.415 1.414zM6.293 16.293l2-2 1.414 1.414-2 2zM14.293 15.707l1.415-1.414 2 2-1.415 1.414z"
-            />
-          </g>
-        </svg>
-      </button>
     </div>
     <div class="caption">
-      <button id="btn-previous" data-tooltip="Previous planet">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20">
-          <path
-            d="M10 20A10 10 0 1 0 0 10a10 10 0 0 0 10 10zm1.289-15.7 1.422 1.4-4.3 4.344 4.289 4.245-1.4 1.422-5.714-5.648z"
-          />
-        </svg>
+      <button id="btn-previous" data-tooltip="Previous body">
+        <svg viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>
       </button>
       <p>Sun</p>
-      <button id="btn-next" data-tooltip="Next planet">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20">
-          <path
-            d="M10 20A10 10 0 1 0 0 10a10 10 0 0 0 10 10zM8.711 4.3l5.7 5.766L8.7 15.711l-1.4-1.422 4.289-4.242-4.3-4.347z"
-          />
-        </svg>
+      <button id="btn-next" data-tooltip="Next body">
+        <svg viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg>
       </button>
     </div>
     <div id="info-panel">
@@ -300,14 +209,13 @@
             <li><b>Hover</b> — shows the body's name.</li>
             <li><b>Search (Ctrl+K)</b> — fuzzy-jump to any of the 23 bodies, including the dwarf planets. Number keys <b>1–9/0</b> jump straight to the ten classic bodies.</li>
             <li><b>‹ › buttons</b> — hop between planets.</li>
-            <li><b>Rocket button</b> — free-roam FPS flight: WASD to move, mouse to look, Space/C up &amp; down, Shift boost, scroll to change speed, Esc to exit.</li>
+            <li><b>Free Roam button</b> — first-person FPS flight: WASD to move, mouse to look, Space/C up &amp; down, Shift boost, scroll to change speed, Esc to exit. Exiting remembers your position, so re-entering continues where you left off.</li>
           </ul>
         </section>
 
         <section>
           <h3>Simulation controls (gear button)</h3>
           <ul>
-            <li><b>Ambient Intensity</b> — brightness of the fill light (0–1).</li>
             <li><b>Show Moons</b> — show or hide all moons.</li>
             <li><b>Run</b> — pause / resume the simulation clock.</li>
             <li><b>Speed Preset</b> — quick time speeds: ×0.125, ×1, ×10, ×100.</li>
@@ -322,15 +230,17 @@
         <section>
           <h3>Toolbar buttons</h3>
           <ul>
-            <li><b>🔍 Search</b> — fuzzy jump to any body (Ctrl+K; 1–9/0 jump to the classic planets).</li>
-            <li><b>▶ Tour</b> — cinematic flight Sun → Neptune.</li>
-            <li><b>? Help</b> — this reference.</li>
-            <li><b>GitHub</b> — the author's profile.</li>
-            <li><b>Light</b> — bright / dim ambient lighting.</li>
-            <li><b>Pin</b> — points of interest (Olympus Mons, Apollo 11…).</li>
-            <li><b>Ring</b> — orbit path lines.</li>
+            <li><b>Search</b> — fuzzy jump to any body (Ctrl+K; 1–9/0 jump to the classic planets).</li>
+            <li><b>Planet Orbits</b> — orbit rings of the planets &amp; dwarf planets around the Sun.</li>
+            <li><b>Moon Orbits</b> — orbit rings of the moons around their host planets (separate from the planet rings).</li>
+            <li><b>Ambient</b> — day / night fill light. This is the only ambient control.</li>
+            <li><b>Labels</b> — points of interest (Olympus Mons, Apollo 11…).</li>
+            <li><b>Free Roam</b> — first-person flight; WASD to move, mouse to look, Space/C up &amp; down, Shift boost, scroll speed, Esc to exit. <i>Your position is remembered — exiting and re-entering continues where you left off.</i></li>
+            <li><b>Tour</b> — cinematic flight Sun → Neptune.</li>
             <li><b>Quiz</b> — 6 questions; pick an option below the question or click the planet in 3D.</li>
-            <li><b>Gear</b> — the full simulation control panel.</li>
+            <li><b>Settings</b> — the full simulation control panel.</li>
+            <li><b>Help</b> — this reference.</li>
+            <li><b>GitHub</b> — the author's profile.</li>
           </ul>
         </section>
 

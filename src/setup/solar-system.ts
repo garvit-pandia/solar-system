@@ -105,16 +105,20 @@ export const applyTrueScale = (
       const worldOrbit = object.distanceKm / EARTH_RADIUS_KM;
       object.activeDistance = worldOrbit / parentWorld;
 
+      // The orbit path must sit on the body's orbit: in parent-local space
+      // the body orbits at activeDistance, so the path (unit-circle
+      // geometry scaled by mesh.scale) needs the same local radius. Its
+      // world radius is then parentWorld × activeDistance = worldOrbit.
       if (object.path) {
-        object.path.scale.setScalar(
-          object.activeDistance / Math.max(object.baseDistance, 1e-9)
-        );
+        object.path.scale.setScalar(object.activeDistance);
       }
     } else {
       object.mesh.scale.setScalar(1);
       object.activeDistance = object.baseDistance;
+      // Restore the view-mode ring radius (NOT 1 — a unit circle would
+      // collapse every ring onto the parent body).
       if (object.path) {
-        object.path.scale.setScalar(1);
+        object.path.scale.setScalar(object.baseDistance);
       }
     }
 

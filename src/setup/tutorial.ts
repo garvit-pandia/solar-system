@@ -19,7 +19,7 @@ const STEPS: TutorialStep[] = [
   },
   {
     title: "Ambient light",
-    body: "Toggles between bright day lighting and dimmed night lighting.",
+    body: "Toggles the fill light between bright day lighting and dimmed night lighting. This is the only ambient control.",
     target: "#btn-ambient",
   },
   {
@@ -28,9 +28,14 @@ const STEPS: TutorialStep[] = [
     target: "#btn-labels",
   },
   {
-    title: "Orbit paths",
-    body: "Reveals the orbital path each planet travels along.",
-    target: "#btn-paths",
+    title: "Planet orbit rings",
+    body: "Reveals the orbit ring each planet and dwarf planet travels along around the Sun.",
+    target: "#btn-planet-paths",
+  },
+  {
+    title: "Moon orbit rings",
+    body: "A separate toggle for the moons' orbit rings around their host planets.",
+    target: "#btn-moon-paths",
   },
   {
     title: "Settings",
@@ -44,7 +49,7 @@ const STEPS: TutorialStep[] = [
   },
   {
     title: "Free roam",
-    body: "The rocket button starts first-person flight — WASD to move, mouse to look, Space/C to rise and dive, Shift to boost. Press Esc to return to orbit.",
+    body: "The Free Roam button starts first-person flight — WASD to move, mouse to look, Space/C to rise and dive, Shift to boost. Press Esc to return to orbit; your position is remembered for next time.",
     target: "#btn-fps",
   },
   {

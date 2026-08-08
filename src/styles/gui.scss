@@ -1,45 +1,74 @@
+/* Focus navigation pill — bottom centre: previous / current body / next */
+
 .caption {
   display: flex;
-  position: absolute;
-  bottom: 0;
-  margin-bottom: 2rem;
-  justify-content: center;
-  width: 100%;
-  gap: 2rem;
+  align-items: center;
+  position: fixed;
+  bottom: 1.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  gap: 0.5rem;
+  padding: 0.42rem 0.7rem;
+  background: rgba(10, 12, 26, 0.66);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   color: white;
+  user-select: none;
 
   p {
-    width: 125px;
+    min-width: 110px;
     text-align: center;
+    font-family: "Trispace", sans-serif;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.92);
+  }
+
+  button {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.85);
+    cursor: pointer;
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease,
+      transform 0.12s ease;
+
+    svg {
+      width: 17px;
+      height: 17px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.16);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
   }
 }
 
-.btn-group {
-  display: flex;
-  position: absolute;
-  top: 0;
-  margin-top: 2rem;
-  justify-content: center;
-  width: 100%;
-  gap: 0.5rem;
-  fill: white;
-}
-
-.caption button,
-.btn-group button,
-.btn-group a {
-  background-color: transparent;
-  color: white;
-  border: none;
-  cursor: pointer;
-  transition: color 0.1s ease;
-  fill: white;
-
-  &:hover {
-    fill: gainsboro;
-  }
-}
-
-#btn-github {
-  display: inline-block;
+/* Keep the gui panel below the new toolbar (its own positioning is fine,
+   but prevent overlap on short viewports). */
+.lil-gui {
+  z-index: 21;
 }

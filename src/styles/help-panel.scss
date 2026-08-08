@@ -200,4 +200,10 @@ body.fps-active {
   #planet-tooltip {
     display: none !important;
   }
+
+  /* The focus nav pill occupies the same bottom-centre spot as the FPS
+     hint — hide it while flying. */
+  .caption {
+    display: none;
+  }
 }
