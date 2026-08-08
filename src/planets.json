@@ -178,6 +178,27 @@
     "funFact": "Home to Olympus Mons, the tallest volcano in the solar system."
   },
   {
+    "name": "Ceres",
+    "radius": 469.7,
+    "distance": 413.9,
+    "period": 1680.5,
+    "daylength": 9.07,
+    "type": "planet",
+    "category": "Dwarf planet",
+    "orbits": "Sun",
+    "tilt": 4,
+    "traversable": false,
+    "textures": {
+      "map": "./textures/ceres.jpg"
+    },
+    "temp": -105,
+    "gravity": 0.28,
+    "moons": 0,
+    "distanceAU": 2.77,
+    "escapeVelocity": 0.51,
+    "funFact": "The largest body in the asteroid belt — and the only dwarf planet that isn't in the Kuiper Belt."
+  },
+  {
     "name": "Jupiter",
     "radius": 69911,
     "distance": 778.5,
@@ -277,6 +298,110 @@
     "distanceAU": 30.07,
     "escapeVelocity": 23.5,
     "funFact": "Neptune has the fastest winds in the solar system, over 2,000 km/h."
+  },
+  {
+    "name": "Pluto",
+    "radius": 1188.3,
+    "distance": 5906.4,
+    "period": 90560,
+    "daylength": -153.3,
+    "type": "planet",
+    "category": "Dwarf planet",
+    "orbits": "Sun",
+    "tilt": 122.53,
+    "traversable": false,
+    "textures": {
+      "map": "./textures/pluto.jpg"
+    },
+    "temp": -229,
+    "gravity": 0.62,
+    "moons": 5,
+    "distanceAU": 39.48,
+    "escapeVelocity": 1.21,
+    "funFact": "In 2006 the IAU reclassified Pluto as a dwarf planet — the first Kuiper Belt object ever found."
+  },
+  {
+    "name": "Charon",
+    "radius": 606,
+    "distance": 0.01964,
+    "period": 6.387,
+    "daylength": 153.3,
+    "type": "moon",
+    "orbits": "Pluto",
+    "tilt": 0,
+    "traversable": false,
+    "textures": {
+      "map": "./textures/charon.jpg"
+    },
+    "temp": -220,
+    "gravity": 0.29,
+    "moons": 0,
+    "distanceAU": 39.48,
+    "escapeVelocity": 0.58,
+    "funFact": "Half the size of Pluto, Charon is so large that the two orbit a point between them — a double dwarf planet system."
+  },
+  {
+    "name": "Eris",
+    "radius": 1163,
+    "distance": 10150,
+    "period": 203830,
+    "daylength": 25.9,
+    "type": "planet",
+    "category": "Dwarf planet",
+    "orbits": "Sun",
+    "tilt": 0,
+    "traversable": false,
+    "textures": {
+      "map": "./textures/eris.jpg"
+    },
+    "temp": -243,
+    "gravity": 0.82,
+    "moons": 1,
+    "distanceAU": 67.7,
+    "escapeVelocity": 1.38,
+    "funFact": "Its discovery in 2005 sparked the debate that ended with Pluto being reclassified."
+  },
+  {
+    "name": "Makemake",
+    "radius": 715,
+    "distance": 6790,
+    "period": 111780,
+    "daylength": 22.8,
+    "type": "planet",
+    "category": "Dwarf planet",
+    "orbits": "Sun",
+    "tilt": 0,
+    "traversable": false,
+    "textures": {
+      "map": "./textures/makemake.jpg"
+    },
+    "temp": -239,
+    "gravity": 0.5,
+    "moons": 1,
+    "distanceAU": 45.4,
+    "escapeVelocity": 0.52,
+    "funFact": "Named after the creator god of the Rapa Nui people of Easter Island."
+  },
+  {
+    "name": "Haumea",
+    "radius": 816,
+    "distance": 6470,
+    "period": 103410,
+    "daylength": 3.9,
+    "type": "planet",
+    "category": "Dwarf planet",
+    "orbits": "Sun",
+    "tilt": 0,
+    "traversable": false,
+    "textures": {
+      "map": "./textures/haumea.jpg"
+    },
+    "temp": -241,
+    "gravity": 0.63,
+    "moons": 2,
+    "distanceAU": 43.2,
+    "escapeVelocity": 0.84,
+    "funFact": "Spins once every 3.9 hours — the fastest-spinning large body in the solar system — stretching it into an ellipsoid."
   },
   {
     "name": "Rings of Saturn",

@@ -11,6 +11,14 @@ Built and maintained by [Garvit](https://github.com/garvit-pandia).
 
 - **Orbits & moons** — the eight planets plus the Moon, Ganymede, Titan,
   Callisto, Io, Europa and Triton, all in motion
+- **Dwarf planets & the Kuiper belt** — Pluto (with Charon), Ceres, Eris,
+  Makemake and Haumea, plus the icy 30–50 AU Kuiper belt (optional, like
+  the main belt)
+- **Search & quick-nav** — Ctrl+K (or the magnifier button) opens a
+  fuzzy-search palette over all 23 bodies; number keys 1–9/0 jump
+  straight to the classic planets
+- **Procedural starfield** — 10,000 temperature-tinted, twinkling stars
+  plus a subtle Milky Way band
 - **True-scale mode** — real sizes and real distances (1 unit = Earth's
   radius); the Sun becomes 109× Earth and space gets properly vast
 - **Free-roam FPS flight** — pointer-lock mouse look, WASD movement, boost,
@@ -54,7 +62,9 @@ npm run build
 ![Sun](docs/screenshots/sun.png)
 ![Earth](docs/screenshots/earth.png)
 ![Saturn](docs/screenshots/saturn.png)
-![Mars](docs/screenshots/mars.png)
+![Pluto](docs/screenshots/pluto.png)
+![Kuiper belt](docs/screenshots/kuiper-belt.png)
+![Search palette](docs/screenshots/search-palette.png)
 ![True scale](docs/screenshots/true-scale.png)
 
 ## Data sources
@@ -64,7 +74,12 @@ npm run build
 - **The Sun, Jupiter, Saturn, Uranus, and Neptune textures** -
   [https://www.solarsystemscope.com/textures/](https://www.solarsystemscope.com/textures/)
 - **Terrestrial Planets textures** - [https://planetpixelemporium.com/planets.html](https://planetpixelemporium.com/planets.html)
-- **Moon texture** - [https://svs.gsfc.nasa.gov/4720](https://svs.gsfc.nasa.gov/4720)
+- **Pluto & Charon textures** — NASA New Horizons global maps (public
+  domain, via Wikimedia Commons)
+- **Ceres, Eris, Makemake & Haumea textures** —
+  [https://www.solarsystemscope.com/textures/](https://www.solarsystemscope.com/textures/)
+  (CC BY 4.0; reconstructed maps — no full-resolution surface imaging
+  exists for these worlds yet)
 - **Ganymede texture** - [https://www.deviantart.com/askaniy/art/Ganymede-Texture-Map-11K-808732114](https://www.deviantart.com/askaniy/art/Ganymede-Texture-Map-11K-808732114)
 - **Titan texture** - [https://planet-texture-maps.fandom.com/wiki/Titan](https://planet-texture-maps.fandom.com/wiki/Titan)
 - **Callisto texture** - [http://bjj.mmedia.is/data/callisto/](http://bjj.mmedia.is/data/callisto/)

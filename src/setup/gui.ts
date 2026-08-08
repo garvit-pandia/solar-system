@@ -1,6 +1,6 @@
 import GUI from "lil-gui";
 import { SolarSystem } from "./solar-system";
-import { AsteroidBelt } from "./asteroid-belt";
+import { InstancedBelt } from "./asteroid-belt";
 import { LAYERS } from "../constants";
 import * as THREE from "three";
 
@@ -14,6 +14,7 @@ export const options = {
   speedPreset: "×0.125",
   trueScale: false,
   showBelt: false,
+  showKuiper: false,
   zangle: 0,
   yangle: 0,
 };
@@ -30,7 +31,8 @@ export const createGUI = (
   solarSystem: SolarSystem,
   clock: THREE.Clock,
   camera: THREE.Camera,
-  belt: AsteroidBelt | null,
+  belt: InstancedBelt | null,
+  kuiperBelt: InstancedBelt | null,
   onTrueScale: (value: boolean) => void
 ) => {
   const gui = new GUI();
@@ -93,6 +95,16 @@ export const createGUI = (
       .name("Asteroid Belt")
       .onChange((value: boolean) => {
         belt.mesh.visible = value;
+      });
+  }
+
+  // Kuiper belt
+  if (kuiperBelt) {
+    gui
+      .add(options, "showKuiper")
+      .name("Kuiper Belt")
+      .onChange((value: boolean) => {
+        kuiperBelt.mesh.visible = value;
       });
   }
 

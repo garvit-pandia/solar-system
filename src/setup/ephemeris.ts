@@ -16,6 +16,8 @@ const MEAN_LONGITUDE_AT_EPOCH: Record<string, number> = {
   Saturn: 49.94432,
   Uranus: 313.23218,
   Neptune: 304.88003,
+  // Dwarf planets: mean longitude at the J2000 epoch (JPL small-body values).
+  Pluto: 238.96,
 };
 
 /**

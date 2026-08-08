@@ -5,6 +5,7 @@ import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass";
 import { createEnvironmentMap } from "./setup/environment-map";
+import { createStarfield } from "./setup/starfield";
 import { createLights } from "./setup/lights";
 import {
   createSolarSystem,
@@ -18,7 +19,8 @@ import { InfoPanel } from "./setup/info-panel";
 import { Tutorial } from "./setup/tutorial";
 import { HelpPanel } from "./setup/help-panel";
 import { Body } from "./setup/planetary-object";
-import { createAsteroidBelt } from "./setup/asteroid-belt";
+import { createAsteroidBelt, createKuiperBelt } from "./setup/asteroid-belt";
+import { NavPalette } from "./setup/nav-palette";
 import { Quiz } from "./setup/quiz";
 import { CinematicTour } from "./setup/tour";
 import { FreeRoam } from "./setup/fly";
@@ -43,8 +45,13 @@ const canvas = document.querySelector("canvas.webgl") as HTMLElement;
 // Scene
 const scene = new THREE.Scene();
 
-// Environment map
-scene.background = createEnvironmentMap("./textures/environment");
+// Environment map — kept for reflections; the background itself is now the
+// procedural starfield.
+scene.environment = createEnvironmentMap("./textures/environment");
+scene.background = new THREE.Color(0x01030a);
+
+// Procedural starfield + Milky Way band (replaces the flat background).
+const starfield = createStarfield(scene);
 
 // Lights
 const [ambientLight, pointLight] = createLights();
@@ -97,6 +104,9 @@ const [solarSystem, planetNames] = createSolarSystem(scene);
 // Asteroid belt
 const asteroidBelt = createAsteroidBelt(scene);
 
+// Kuiper belt (icy outer belt, 30–50 AU)
+const kuiperBelt = createKuiperBelt(scene);
+
 const FAR_VIEW = 1000;
 const FAR_TRUE_SCALE = 2_000_000;
 
@@ -123,6 +133,7 @@ const updateCameraLimits = (focusName: string) => {
 const applyScaleMode = (enabled: boolean) => {
   applyTrueScale(solarSystem, enabled);
   asteroidBelt.setTrueScale(enabled);
+  kuiperBelt.setTrueScale(enabled);
   // The giant true-scale Sun blows out the bloom halo into a muddy blob —
   // tone the bloom down while true scale is active.
   bloomPass.strength = enabled ? 0.15 : 0.75;
@@ -366,7 +377,24 @@ let elapsedTime = 0;
 fakeCamera.layers.enable(LAYERS.POILabel);
 
 // GUI
-createGUI(ambientLight, solarSystem, clock, fakeCamera, asteroidBelt, applyScaleMode);
+createGUI(ambientLight, solarSystem, clock, fakeCamera, asteroidBelt, kuiperBelt, applyScaleMode);
+
+// Search & quick-nav palette (Ctrl+K / magnifier / number keys)
+const palette = new NavPalette({
+  bodies: Object.values(solarSystem).map((object) => {
+    const body = object.mesh.userData.body as Body;
+    return { name: body.name, type: body.type, category: body.category };
+  }),
+  shortcuts: planetNames,
+  onSelect: (name: string) => {
+    if (fps.active) fps.exit();
+    if (options.focus !== name) {
+      changeFocus(options.focus, name);
+      options.focus = name;
+    }
+    infoPanel.open(solarSystem[name].mesh.userData.body);
+  },
+});
 
 // Debug hook for automated verification (dev builds only)
 if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
@@ -382,6 +410,12 @@ if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
     quiz,
     tour,
     fps,
+    starfield,
+    palette,
+    asteroidBelt,
+    kuiperBelt,
+    renderer,
+    bloomComposer,
     applyTrueScale,
     getWorldScale,
   };
@@ -392,6 +426,14 @@ if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
   // frame hitch cannot teleport the simulation date and planet positions.
   const dt = Math.min(clock.getDelta(), 0.1);
   elapsedTime += dt * options.speed;
+
+  // Keep the star shell centered on the camera (stars "at infinity").
+  starfield.update(
+    fakeCamera,
+    camera,
+    performance.now(),
+    renderer.getPixelRatio()
+  );
 
   asteroidBelt.tick(elapsedTime);
 

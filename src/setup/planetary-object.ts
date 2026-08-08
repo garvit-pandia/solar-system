@@ -13,6 +13,7 @@ export interface Body {
   daylength: number;
   textures: TexturePaths;
   type: string;
+  category?: string;
   tilt: number;
   temp?: number;
   orbits?: string;
