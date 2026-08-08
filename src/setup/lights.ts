@@ -20,8 +20,12 @@ export const createLights = (): Lights => {
   // texture: 0.95 sun + 0.45 day ambient ≈ 1.4 max, under the clip point).
   const pointLight = new THREE.PointLight(0xffffff, 0.95, 0, 0);
   pointLight.castShadow = true;
-  pointLight.shadow.mapSize.width = 4096;
-  pointLight.shadow.mapSize.height = 4096;
+  // 2048² per cube face (6 faces) — PCFSoft + radius 16 already soften the
+  // edges; 4096² was measurable fill-rate for no visible gain at planet
+  // scale. (Shadows are disabled entirely in true-scale mode — the shadow
+  // camera only covers 30 units around the Sun.)
+  pointLight.shadow.mapSize.width = 2048;
+  pointLight.shadow.mapSize.height = 2048;
   pointLight.shadow.camera.near = 1.5;
   pointLight.shadow.camera.far = 30;
   pointLight.shadow.radius = 16;

@@ -97,8 +97,10 @@ a.tool-btn {
   text-decoration: none;
 }
 
-/* Compact icon-only dock on narrow screens */
-@media (max-width: 1180px) {
+/* Compact icon-only dock on narrow screens. The breakpoint sits ABOVE the
+   dock's label-mode width (~1313px): below it the buttons would overflow
+   the viewport and the Search/GitHub ends would get clipped. */
+@media (max-width: 1340px) {
   .tool-btn {
     min-width: 44px;
     padding: 8px;

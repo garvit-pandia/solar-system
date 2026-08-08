@@ -5,6 +5,18 @@ const MOUSE_SENSITIVITY = 0.0022;
 const BASE_SPEED = 5;
 const BOOST_MULTIPLIER = 10;
 const SPEED_STEP = 1.25;
+/** Velocity smoothing — accel/decel rate (per second). */
+const ACCELERATION = 9;
+/** Edge-look assist: how long the cursor must sit at the edge (ms). */
+const EDGE_IDLE_MS = 140;
+/** Edge-look assist: ramp-in duration for the drift (ms). */
+const EDGE_RAMP_MS = 350;
+/** Edge-look assist: max drift speed (rad/s). */
+const EDGE_DRIFT_RATE = 0.8;
+/** Distance from a viewport edge that counts as "at the edge" (px). */
+const EDGE_MARGIN = 10;
+/** World-space up vector (Space/C motion stays vertical while flying). */
+const WORLD_UP = new THREE.Vector3(0, 1, 0);
 
 export interface FreeRoamOptions {
   /** Camera driven by the controller (a scene-root child while active). */
@@ -28,9 +40,16 @@ export interface FreeRoamOptions {
  * Mouse-look WITHOUT pointer lock: while the cursor is over the canvas,
  * moving the mouse rotates the view (movementX/Y deltas work unlocked) and
  * the cursor hides. Moving the cursor onto the toolbar restores a normal
- * cursor, so every button stays clickable mid-flight. WASD movement,
- * Space/C vertical, Shift boost, scroll adjusts flight speed. Esc exits.
- * The camera is driven directly (position + quaternion); the main loop's
+ * cursor, so every button stays clickable mid-flight.
+ *
+ * Edge-look assist: when the cursor pins against a viewport edge (e.g. the
+ * top of the screen) and the last mouse motion was pointing outward, the
+ * view keeps drifting in that direction — you can keep "sliding up" past
+ * the edge. Any real mouse delta or click cancels it instantly.
+ *
+ * WASD movement with velocity smoothing (accel/decel), Space/C vertical,
+ * Shift boost, scroll adjusts flight speed. Esc exits. The camera is
+ * driven directly (position + quaternion); the main loop's
  * `camera.copy(fakeCamera)` keeps the render camera in sync.
  */
 export class FreeRoam {
@@ -47,6 +66,19 @@ export class FreeRoam {
   private speedMultiplier = 1;
   private keys = new Set<string>();
   private euler = new THREE.Euler(0, 0, 0, "YXZ");
+
+  // Velocity smoothing state (world-space velocity, no per-frame allocs).
+  private readonly velocity = new THREE.Vector3();
+  private readonly targetVelocity = new THREE.Vector3();
+  private readonly targetWorldVelocity = new THREE.Vector3();
+
+  // Edge-look assist state.
+  private cursorX = 0;
+  private cursorY = 0;
+  private lastMoveTime = 0;
+  private lastDirX = 0;
+  private lastDirY = 0;
+  private driftStartTime = 0;
 
   constructor(options: FreeRoamOptions) {
     this.camera = options.camera;
@@ -71,6 +103,8 @@ export class FreeRoam {
     );
     this.speedMultiplier = 1;
     this.keys.clear();
+    this.velocity.set(0, 0, 0);
+    this.driftStartTime = 0;
 
     this.onEnter?.();
   };
@@ -79,10 +113,23 @@ export class FreeRoam {
     if (!this.active) return;
     this.active = false;
     this.keys.clear();
+    this.velocity.set(0, 0, 0);
+    this.driftStartTime = 0;
     this.onExit?.();
   };
 
   private onMouseMove = (e: MouseEvent): void => {
+    this.cursorX = e.clientX;
+    this.cursorY = e.clientY;
+    this.lastMoveTime = performance.now();
+    // Remember the direction of the last REAL mouse motion — used by the
+    // edge-look assist to know which way the user was heading when the
+    // cursor pinned against the screen edge.
+    if (e.movementX !== 0 || e.movementY !== 0) {
+      this.lastDirX = Math.sign(e.movementX);
+      this.lastDirY = Math.sign(e.movementY);
+    }
+    this.driftStartTime = 0;
     if (!this.active) return;
     // Unlocked mouse-look: deltas work without pointer lock; the cursor
     // disappears over the canvas (CSS) but reappears over the toolbar,
@@ -141,35 +188,92 @@ export class FreeRoam {
   };
 
   /**
+   * True when the cursor is parked within EDGE_MARGIN of a viewport edge,
+   * the last mouse motion pointed outward toward that edge, no mouse event
+   * has arrived for a while, and nothing interactive sits under the cursor.
+   */
+  private isEdgeStuck(now: number): boolean {
+    if (now - this.lastMoveTime < EDGE_IDLE_MS) return false;
+    const { innerWidth, innerHeight } = window;
+    const atTop = this.cursorY <= EDGE_MARGIN && this.lastDirY < 0;
+    const atBottom = this.cursorY >= innerHeight - EDGE_MARGIN && this.lastDirY > 0;
+    const atLeft = this.cursorX <= EDGE_MARGIN && this.lastDirX < 0;
+    const atRight = this.cursorX >= innerWidth - EDGE_MARGIN && this.lastDirX > 0;
+    if (!atTop && !atBottom && !atLeft && !atRight) return false;
+    // Never drift while the cursor rests on the toolbar or any other UI
+    // element that sits above the canvas.
+    const topEl = document.elementFromPoint(this.cursorX, this.cursorY);
+    return !!topEl && (topEl === this.canvas || this.canvas.contains(topEl));
+  }
+
+  /**
+   * Edge-look assist: while the cursor is pinned against an edge, keep the
+   * view drifting in the direction the user was moving — so "keep sliding
+   * up" works even when the OS cursor cannot travel any further.
+   */
+  private updateEdgeDrift(dt: number, now: number): void {
+    if (!this.isEdgeStuck(now)) {
+      this.driftStartTime = 0;
+      return;
+    }
+    if (this.driftStartTime === 0) this.driftStartTime = now;
+    const ramp = Math.min(1, (now - this.driftStartTime) / EDGE_RAMP_MS);
+    const rate = EDGE_DRIFT_RATE * ramp * dt;
+    const { innerWidth, innerHeight } = window;
+    if (this.cursorY <= EDGE_MARGIN && this.lastDirY < 0) {
+      this.pitch -= this.lastDirY * rate; // look up
+    } else if (this.cursorY >= innerHeight - EDGE_MARGIN && this.lastDirY > 0) {
+      this.pitch -= this.lastDirY * rate; // look down
+    }
+    if (this.cursorX <= EDGE_MARGIN && this.lastDirX < 0) {
+      this.yaw -= this.lastDirX * rate; // look left
+    } else if (this.cursorX >= innerWidth - EDGE_MARGIN && this.lastDirX > 0) {
+      this.yaw -= this.lastDirX * rate; // look right
+    }
+    this.pitch = Math.max(-PITCH_LIMIT, Math.min(PITCH_LIMIT, this.pitch));
+  }
+
+  /**
    * Advance the camera by one frame. dt is the clamped simulation delta.
    */
   update = (dt: number): void => {
     if (!this.active) return;
 
+    const now = performance.now();
+    this.updateEdgeDrift(dt, now);
+
     this.euler.set(this.pitch, this.yaw, 0);
     this.camera.quaternion.setFromEuler(this.euler);
 
-    const speed = this.getSpeed() * dt;
+    // Build the target velocity from the held keys (normalised so diagonal
+    // flight is not faster), then smooth toward it — accel/decel instead of
+    // instant start/stop.
+    let ix = 0;
+    let iy = 0;
+    let iz = 0;
+    if (this.keys.has("KeyW") || this.keys.has("ArrowUp")) iz -= 1;
+    if (this.keys.has("KeyS") || this.keys.has("ArrowDown")) iz += 1;
+    if (this.keys.has("KeyA") || this.keys.has("ArrowLeft")) ix -= 1;
+    if (this.keys.has("KeyD") || this.keys.has("ArrowRight")) ix += 1;
+    if (this.keys.has("Space")) iy += 1;
+    if (this.keys.has("KeyC")) iy -= 1;
 
-    if (this.keys.has("KeyW") || this.keys.has("ArrowUp")) {
-      this.camera.translateZ(-speed);
+    const speed = this.getSpeed();
+    const inputLen = Math.hypot(ix, iy, iz);
+    if (inputLen > 0) {
+      this.targetVelocity.set(ix / inputLen, iy / inputLen, iz / inputLen);
+    } else {
+      this.targetVelocity.set(0, 0, 0);
     }
-    if (this.keys.has("KeyS") || this.keys.has("ArrowDown")) {
-      this.camera.translateZ(speed);
-    }
-    if (this.keys.has("KeyA") || this.keys.has("ArrowLeft")) {
-      this.camera.translateX(-speed);
-    }
-    if (this.keys.has("KeyD") || this.keys.has("ArrowRight")) {
-      this.camera.translateX(speed);
-    }
-    // Vertical motion is world-space (up/down), so flying over the orbital
-    // plane feels natural.
-    if (this.keys.has("Space")) {
-      this.camera.position.y += speed;
-    }
-    if (this.keys.has("KeyC")) {
-      this.camera.position.y -= speed;
-    }
+    // W/A/S/D move in the camera frame (yaw AND pitch, as before), Space/C
+    // stay world-vertical. Smooth toward the target — accel/decel flight.
+    this.targetWorldVelocity
+      .set(this.targetVelocity.x, 0, this.targetVelocity.z)
+      .applyQuaternion(this.camera.quaternion)
+      .addScaledVector(WORLD_UP, this.targetVelocity.y)
+      .multiplyScalar(speed);
+
+    this.velocity.lerp(this.targetWorldVelocity, Math.min(1, dt * ACCELERATION));
+    this.camera.position.addScaledVector(this.velocity, dt);
   };
 }

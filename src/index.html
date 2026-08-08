@@ -72,7 +72,7 @@
         <span class="label">Labels</span>
       </button>
       <span class="toolbar-sep" aria-hidden="true"></span>
-      <button id="btn-fps" class="tool-btn" aria-label="Free roam" data-tooltip="Free roam (FPS) — exit resumes where you left off">
+      <button id="btn-fps" class="tool-btn" aria-label="Free roam" data-tooltip="Free roam (FPS) — exiting leaves the camera in place (free camera mode)">
         <svg viewBox="0 0 24 24"><path d="M12.2 15.7c-3.2-1.2-5.1-4.2-4.6-8.1l3.2-3.6a9.6 9.6 0 0 1 8.5-1.6 9.6 9.6 0 0 1-1.6 8.5l-3.6 3.2c-1.3 1-2.9 1.6-3.9 1.6z"/><circle cx="14.9" cy="9.1" r="1.35"/><path d="M9.6 9.9 4.9 13.2l1.9.8-.8 2.3 2.3-.8.8 1.9 3.3-4.7"/></svg>
         <span class="label">Free Roam</span>
       </button>
@@ -192,7 +192,7 @@
       <span class="fps-title">Free roam</span>
       <span>WASD move · Mouse to look · Space / C up &amp; down · Shift boost · Scroll speed</span>
       <span class="fps-speed">Speed <span id="fps-speed-value"></span></span>
-      <span class="fps-exit">Toolbar stays clickable while flying · Free Roam button or Esc to return</span>
+      <span class="fps-exit">Toolbar stays clickable while flying · Pushing the mouse past a screen edge keeps looking · Esc to exit — camera stays in place</span>
     </div>
 
     <div id="help-panel">
@@ -209,7 +209,7 @@
             <li><b>Hover</b> — shows the body's name.</li>
             <li><b>Search (Ctrl+K)</b> — fuzzy-jump to any of the 23 bodies, including the dwarf planets. Number keys <b>1–9/0</b> jump straight to the ten classic bodies.</li>
             <li><b>‹ › buttons</b> — hop between planets.</li>
-            <li><b>Free Roam button</b> — first-person FPS flight: WASD to move, move the mouse over the 3D view to look (no pointer lock — the toolbar stays clickable mid-flight), Space/C up &amp; down, Shift boost, scroll to change speed, Esc to exit. Exiting remembers your position, so re-entering continues where you left off.</li>
+            <li><b>Free Roam button</b> — first-person FPS flight: WASD to move, move the mouse over the 3D view to look (no pointer lock — the toolbar stays clickable mid-flight), Space/C up &amp; down, Shift boost, scroll to change speed, Esc to exit. Pushing the mouse against a screen edge keeps the view turning. Exiting deselects free roam only — the camera stays exactly where it is and you switch to free-camera mode (drag to look, scroll to dolly); re-entering free roam continues from the same spot. Click any planet to focus it again.</li>
           </ul>
         </section>
 
@@ -236,7 +236,7 @@
             <li><b>Moon Orbits</b> — orbit rings of the moons around their host planets (separate from the planet rings).</li>
             <li><b>Ambient</b> — quick day / night fill-light preset (fine control lives in Settings → Ambient Intensity).</li>
             <li><b>Labels</b> — points of interest (Olympus Mons, Apollo 11…).</li>
-            <li><b>Free Roam</b> — first-person flight; WASD to move, move the mouse over the 3D view to look (toolbar stays clickable), Space/C up &amp; down, Shift boost, scroll speed, Esc to exit. <i>Your position is remembered — exiting and re-entering continues where you left off.</i></li>
+            <li><b>Free Roam</b> — first-person flight; WASD to move, move the mouse over the 3D view to look (toolbar stays clickable), Space/C up &amp; down, Shift boost, scroll speed, Esc to exit. <i>Exiting leaves the camera in place — no planet is selected (free-camera mode: drag to look, scroll to dolly); re-entering continues from the same spot.</i></li>
             <li><b>Tour</b> — cinematic flight Sun → Neptune.</li>
             <li><b>Quiz</b> — 6 questions; pick an option below the question or click the planet in 3D.</li>
             <li><b>Settings</b> — the full simulation control panel.</li>

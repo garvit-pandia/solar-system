@@ -1,3 +1,54 @@
+# STATUS — Zoom fix + sim-date overlap fix (2026-08-08, hotfix round)
+
+State: COMPLETE — detached-mode wheel zoom is proportional and consistent at
+every distance and scale mode, and the sim-date chip is never covered by the
+toolbar. Verified via console assertions + vision + typecheck + build.
+
+## What changed
+
+1. **Wheel zoom in detached/free-camera mode was broken & inconsistent**
+   - Root cause: the FreeCamera zoom state was a hardcoded scalar (30) that
+     never synced to the camera's ACTUAL distance. After a free-roam flight
+     the camera can be anywhere (0.3 units from a planet or thousands out),
+     so: zoom-in dead-ended at the max limit (target pinned → zero dolly),
+     zoom steps were imperceptible at large distances (true scale: 7.5-unit
+     steps in a 100k-unit void), close-range steps tunneled through the
+     body (7.5-unit dive from 0.3 units away), and a clamped target from
+     beyond the range fired one giant dolly — the "glitching frames".
+   - Fix (`src/setup/free-camera.ts`): `enter()` now derives
+     `zoom = zoomTarget = camera.position.length()` (the camera is a
+     scene-root child in this mode, so distance is world-space). Every wheel
+     step is a proportional 25% of the current distance. Limits are enforced
+     only while the zoom state is already inside them — a camera beyond
+     maxDistance zooms freely until it re-enters the range (no dead-end, no
+     teleport dolly).
+2. **DPR oscillation shimmer** (`src/script.ts`): the adaptive pixel-ratio
+   now needs TWO consecutive 30-frame windows agreeing before changing —
+   every DPR change resizes the drawing buffer, and a borderline frame
+   budget oscillated it back and forth while zooming.
+3. **Sim-date covered by the toolbar** (`src/styles/hud.scss`,
+   `src/styles/toolbar.scss`): the 11-button dock is ~1313px wide — at any
+   viewport under ~1900px it reached the left corner and covered the chip
+   (measured overlap at 1280–1440). Fix: the chip parks below the dock
+   (top 5.5rem) on viewports ≤2000px; the icon-only toolbar breakpoint
+   raised 1180 → 1340px so the dock no longer overflows the viewport
+   (Search/GitHub were clipped at 1280).
+
+## Verification summary (2026-08-08)
+
+- typecheck: clean · build: clean · console: 0 JS errors
+- Detached zoom: 20 → 15.0003 → 20 units (exactly 1/1.25 ratio each step);
+  zoom derived from actual distance on every entry (3000 → 3000, 0.3 → 0.3)
+- Far-beyond-max entry: one wheel-in dollies exactly 25% (750 units) —
+  previously dead; close-range entry: 25% step of 0.3 (0.075) — no tunnel
+- Limits: zoomTarget pins at exactly 500 (max) and camera settles (no drift)
+- Focused-mode OrbitControls wheel zoom unaffected (0.364 → 0.346 closer)
+- Layout at 1280×577: toolbar 606px icon-only, fully in viewport, no
+  clipping; sim-date at top 88px, below dock (bottom 70px) — no overlap;
+  vision-model confirmed chip visible, toolbar not clipped
+
+---
+
 # STATUS — Camera-lock fix (2026-08-08, after round 5)
 
 State: COMPLETE — selecting any body (planet / moon / Sun / ring) now keeps it

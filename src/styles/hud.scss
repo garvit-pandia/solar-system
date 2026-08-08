@@ -25,6 +25,16 @@
   user-select: none;
 }
 
+/* The 11-button dock is ~1300px wide, so up to ~2000px viewports it
+   reaches the left corner and would cover this chip (the dock has the
+   higher z-index). Below that width the chip parks under the dock
+   instead — same top-left readout, no overlap at any size. */
+@media (max-width: 2000px) {
+  #sim-date {
+    top: 5.5rem;
+  }
+}
+
 #planet-tooltip {
   position: fixed;
   z-index: 12;
