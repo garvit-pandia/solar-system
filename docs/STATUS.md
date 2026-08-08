@@ -78,6 +78,8 @@ measurements + typecheck + build). P1/P2 items intentionally NOT touched.
 - Screenshots refreshed in docs/screenshots/ (sun, earth, saturn, pluto, kuiper-belt,
   search-palette, true-scale) — README updated with the new features, screenshots and
   texture attributions
+- Committed as `837f663` (feat: P0 pack — search palette, dwarf planets + Kuiper belt,
+  procedural starfield + Milky Way); completion pinged to the user on Telegram
 
 ## Deploy (user)
 1. Create GitHub repo (e.g. `solar-system`), push: git remote add origin <url> && git push -u origin master
