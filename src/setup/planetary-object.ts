@@ -67,7 +67,20 @@ export class PlanetaryObject {
   orbits?: string;
   type: string;
   tilt: number; // degrees
-  mesh: THREE.Mesh;
+  /**
+   * Outer transform holder — the camera, moons, and orbit paths are parented
+   * here. It only TRANSLATES (orbit), carries the static axial tilt, and
+   * scales (true-scale). It never rotates per-frame: a rotating parent would
+   * drag the attached camera around the body, making the view orbit the
+   * planet (day/night spin is applied to {@link spinMesh} instead).
+   */
+  mesh: THREE.Object3D;
+  /**
+   * Inner visual mesh — the textured sphere (or ring) that carries the
+   * day/night rotation, plus the atmosphere and POI labels glued to the
+   * surface. Children of this mesh rotate with the planet's surface.
+   */
+  spinMesh: THREE.Mesh;
   path?: THREE.Line;
   rng: number;
   map!: THREE.Texture;
@@ -103,8 +116,20 @@ export class PlanetaryObject {
 
     this.loadTextures(body.textures);
 
-    this.mesh = this.createMesh();
+    // Outer rig: orbit translation + static axial tilt + true-scale scaling.
+    // The camera, moons and paths attach here. See the `mesh` doc comment —
+    // this object must never spin per-frame.
+    this.mesh = new THREE.Object3D();
+    // Rings inherit their tilt from the parent planet's mesh (as before);
+    // only sphere bodies carry their own tilt on the rig.
+    if (this.type !== "ring") {
+      this.mesh.rotation.x = this.tilt;
+    }
     this.mesh.userData.body = body;
+
+    // Inner visual mesh: the textured body that performs the day/night spin.
+    this.spinMesh = this.createMesh();
+    this.mesh.add(this.spinMesh);
 
     // Orbit paths: planets & dwarf planets (around the Sun) and moons
     // (around their host). Rings have no orbit (distance 0 → a degenerate
@@ -118,12 +143,14 @@ export class PlanetaryObject {
     }
 
     if (this.atmosphere.map) {
-      this.mesh.add(this.createAtmosphereMesh());
+      // Atmosphere rides the spinning visual so clouds rotate with the
+      // surface; its tilt is inherited from the outer rig (no own rotation).
+      this.spinMesh.add(this.createAtmosphereMesh());
     }
 
     this.initLabels(body.labels);
 
-    const geometry = this.mesh.geometry as
+    const geometry = this.spinMesh.geometry as
       | THREE.SphereGeometry
       | THREE.RingGeometry;
     const params = geometry.parameters as {
@@ -138,10 +165,12 @@ export class PlanetaryObject {
 
   /**
    * Creates label objects for each point-of-interest.
+   * Labels attach to the SPINNING visual mesh so they stay glued to their
+   * surface features as the planet rotates (the camera frame stays fixed).
    * @param labels - List of labels to display.
    */
   private initLabels = (labels?: PointOfInterest[]) => {
-    this.labels = new Label(this.mesh, this.radius);
+    this.labels = new Label(this.spinMesh, this.radius);
 
     if (labels) {
       labels.forEach((poi) => {
@@ -206,7 +235,9 @@ export class PlanetaryObject {
     }
 
     const sphere = new THREE.Mesh(geometry, material);
-    sphere.rotation.x = this.tilt;
+    // No rotation.x here — the static axial tilt lives on the outer rig so
+    // the camera/moon frame stays untwisted; this mesh only spins on Y
+    // (day/night), which then happens around the rig's tilted axis.
     sphere.castShadow = true;
     sphere.receiveShadow = true;
 
@@ -231,7 +262,6 @@ export class PlanetaryObject {
 
     const sphere = new THREE.Mesh(geometry, material);
     sphere.receiveShadow = true;
-    sphere.rotation.x = this.tilt;
     return sphere;
   };
 
@@ -257,10 +287,13 @@ export class PlanetaryObject {
     this.mesh.position.x = Math.sin(orbit) * this.activeDistance;
     this.mesh.position.z = Math.cos(orbit) * this.activeDistance;
 
+    // Day/night spin on the VISUAL mesh only — never on the outer rig, which
+    // hosts the camera (a spinning camera parent would orbit the view around
+    // the body every frame).
     if (this.type === "ring") {
-      this.mesh.rotation.z = rotation;
+      this.spinMesh.rotation.z = rotation;
     } else {
-      this.mesh.rotation.y = rotation;
+      this.spinMesh.rotation.y = rotation;
     }
   };
 

@@ -1,3 +1,43 @@
+# STATUS — Camera-lock fix (2026-08-08, after round 5)
+
+State: COMPLETE — selecting any body (planet / moon / Sun / ring) now keeps it
+locked in the camera frame; the view no longer orbits the body on its own.
+Root cause: the camera is parented to the focused body's mesh, and that same
+mesh rotated every frame for the day/night spin — so the camera rode the spin
+and revolved around the planet (~1.24 s per revolution for Jupiter at ×1).
+Fix: split the transform hierarchy — the outer mesh (camera host) now only
+translates (orbit), carries the static axial tilt, and scales (true-scale);
+a new inner `spinMesh` carries the day/night rotation, plus the atmosphere
+and POI labels so they stay glued to surface features. Rings handled the same
+way (outer static, inner spins).
+
+## What changed
+
+- `src/setup/planetary-object.ts`: `mesh` is now an `Object3D` rig (never
+  rotates per-frame); new `spinMesh: Mesh` = the textured body. Tilt moved
+  to the rig (rings keep inheriting tilt from the parent planet, as before);
+  atmosphere + POI labels reparented to `spinMesh`; `tick()` spins
+  `spinMesh` only. `baseRadius` reads from `spinMesh.geometry`.
+- Raycasting unchanged (findClickedBody walks parents → rig has userData.body).
+
+## Verification summary (2026-08-08)
+
+- typecheck: clean · build: clean
+- Jupiter focus (via real key 7): camera world position moved 0.0033 units
+  over 11.5 s = exactly Jupiter's own orbital drift (previously ~9 full
+  revolutions ≈ 3.7-unit swing in the same window); `spinMesh` rotated
+  2.4 rad in that window — surface spins, camera does not.
+- Mars focus: camera delta 0.000 over 4 s; 5 POI labels render at distinct
+  non-overlapping rects; day/night terminator intact.
+- Real click path: pointerdown/up on Mercury's disc → focus Mercury, camera
+  reparented, info card opens (new inner-mesh raycast hierarchy works).
+- Vision: Jupiter + Mercury + Mars stable and centered in frame across
+  screenshots; no starfield rotation, no motion artifacts.
+- Free-roam / tour paths untouched (they drive fakeCamera; changeFocus
+  re-parenting identical).
+
+---
+
 # STATUS — Improvement Round 5: Lighting, sim date, free-roam UX, labels, UI identity (2026-08-08)
 
 Previous round: round 4 (FPS resume, split orbit rings, toolbar redesign).
