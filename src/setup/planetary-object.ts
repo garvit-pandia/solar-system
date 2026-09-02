@@ -147,7 +147,11 @@ export class PlanetaryObject {
     // (around their host). Rings have no orbit (distance 0 → a degenerate
     // zero-radius circle), so they get no path at all.
     if (this.orbits && this.type !== "ring") {
-      this.path = createPath(this.distance);
+      // Sun-orbiting rings get the animated dash "flow" (travel direction);
+      // moon rings stay solid — at their size dashes would shimmer.
+      this.path = createPath(this.distance, {
+        dashed: this.orbits === "Sun",
+      });
       // Orbit paths must never intercept raycasts — otherwise clicks near a
       // parent body's orbit resolve to the wrong body (e.g. the Moon's path
       // circle around Earth captures every click while the camera orbits Earth).

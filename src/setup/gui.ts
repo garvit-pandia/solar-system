@@ -27,6 +27,8 @@ export const options = {
   trueScale: false,
   showBelt: false,
   showKuiper: false,
+  // Fading comet-tail trails behind planets & dwarfs (trail.ts)
+  showTrails: true,
 };
 
 /** Remembered day-mode level, so the toolbar toggle returns to the user's
@@ -144,6 +146,9 @@ export const createGUI = (
 
   // Fine-grained simulation speed
   const speedController = gui.add(options, "speed", 0.05, 200, 0.05).name("Speed");
+
+  // Fading motion trails behind the planets & dwarf planets
+  gui.add(options, "showTrails").name("Motion Trails");
 
   // True scale mode
   gui

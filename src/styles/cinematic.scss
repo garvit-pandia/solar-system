@@ -1,0 +1,181 @@
+@use "./tokens.scss" as *;
+
+/* ============================================================
+   Cinematic mode — letterbox + every DOM UI layer faded out.
+   Toggled by the Cinematic rail button / the H key (cinematic.ts).
+   ============================================================ */
+
+#letterbox {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+
+  .lb-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 0;
+    background: #000;
+    transition: height 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .lb-top {
+    top: 0;
+  }
+
+  .lb-bottom {
+    bottom: 0;
+  }
+}
+
+body.cinematic {
+  #letterbox .lb-bar {
+    height: 11vh;
+  }
+
+  // Every UI layer fades — the scene (and the floating capture chip) is all
+  // that remains. POI chips live in the CSS2D layer (#label-layer).
+  .toolbar,
+  .caption,
+  #info-panel,
+  #sim-date,
+  #telemetry,
+  #fps-hint,
+  #welcome-card,
+  #help-panel,
+  #quiz-card,
+  #nav-palette,
+  #spotlight,
+  #tooltip,
+  #planet-tooltip,
+  #label-layer .label {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+}
+
+// Smooth the transitions on the layers themselves (harmless when idle).
+.toolbar,
+.caption,
+#info-panel,
+#sim-date,
+#telemetry,
+#fps-hint,
+#welcome-card,
+#help-panel,
+#quiz-card,
+#nav-palette,
+#label-layer .label {
+  transition: opacity 0.3s ease;
+}
+
+/* Floating capture chip — the only visible UI during cinematic mode. */
+#cinematic-hud {
+  position: fixed;
+  right: 1.1rem;
+  bottom: 1.1rem;
+  z-index: 40;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.45rem;
+  background: $panel-bg;
+  backdrop-filter: $panel-blur;
+  -webkit-backdrop-filter: $panel-blur;
+  border: $hairline;
+  border-radius: $radius-pill;
+  box-shadow: $panel-shadow;
+  animation: cinematic-hud-in 0.35s ease;
+
+  // The `hidden` attribute must win over the flex display above — the chip
+  // only exists visually while cinematic mode is active.
+  &[hidden] {
+    display: none;
+  }
+
+  button {
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: $radius-pill;
+    background: transparent;
+    color: $text-72;
+    cursor: pointer;
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
+
+    svg {
+      width: 19px;
+      height: 19px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: $text-92;
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgba($accent, 0.7);
+      outline-offset: 2px;
+    }
+  }
+}
+
+@keyframes cinematic-hud-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Feedback toast (screenshot saved, …) */
+#app-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 2.2rem;
+  z-index: 60;
+  transform: translateX(-50%) translateY(8px);
+  font-family: $font;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: $tracking;
+  text-transform: uppercase;
+  color: $text-92;
+  background: $panel-bg-strong;
+  backdrop-filter: $panel-blur;
+  -webkit-backdrop-filter: $panel-blur;
+  border: $hairline;
+  border-radius: $radius-pill;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  padding: 0.42rem 1rem;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+
+  &.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@media (max-width: 620px) {
+  body.cinematic #letterbox .lb-bar {
+    height: 7vh;
+  }
+}

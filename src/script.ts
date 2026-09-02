@@ -32,6 +32,10 @@ import { CinematicTour } from "./setup/tour";
 import { FreeRoam } from "./setup/fly";
 import { FreeCamera } from "./setup/free-camera";
 import { PathFader } from "./setup/path-visibility";
+import { Cinematic } from "./setup/cinematic";
+import { MotionTrails } from "./setup/trail";
+import { createTelemetry, computeKmPerUnit } from "./setup/telemetry";
+import { updateOrbitFlow } from "./setup/path";
 
 THREE.ColorManagement.enabled = false;
 
@@ -318,6 +322,8 @@ controls.maxDistance = 50;
 const labelRenderer = new CSS2DRenderer();
 labelRenderer.setSize(sizes.width, sizes.height);
 document.body.appendChild(labelRenderer.domElement);
+// Named root so cinematic mode can fade the POI chips via CSS.
+labelRenderer.domElement.id = "label-layer";
 
 // Renderer
 const renderer = new THREE.WebGLRenderer({
@@ -361,6 +367,13 @@ bloomComposer.setSize(sizes.width, sizes.height);
 bloomComposer.renderToScreen = true;
 bloomComposer.addPass(renderScene);
 bloomComposer.addPass(bloomPass);
+
+// Cinematic mode + one-click screenshot (H toggles, P captures)
+const cinematic = new Cinematic({
+  composer: bloomComposer,
+  canvas: canvas as HTMLCanvasElement,
+  getFocus: () => options.focus,
+});
 
 // ─── Adaptive quality: pixel ratio follows the frame budget ─────────────
 // Tracks a rolling 30-frame average; drops DPR a step when the frame time
@@ -419,6 +432,13 @@ const infoPanel = new InfoPanel();
 // Sim-date HUD
 const simDateEl = document.getElementById("sim-date") as HTMLElement;
 let lastSimDateUpdate = 0;
+
+// Telemetry strip (distance / velocity / scale / sim rate) — shares the
+// sim-date 500 ms throttle.
+const telemetry = createTelemetry();
+const telFocusPos = new THREE.Vector3();
+const telCamPos = new THREE.Vector3();
+const telResolvePos = new THREE.Vector3();
 
 // Quiz mode — answer by clicking the chips or the planets in the 3D scene
 const quiz = new Quiz();
@@ -516,6 +536,10 @@ const pathFader = new PathFader({
   getFocus: () => options.focus,
 });
 const pathFaderCameraPos = new THREE.Vector3();
+
+// Fading comet-tail trails behind every planet & dwarf planet (world space).
+const trails = new MotionTrails(solarSystem, getWorldScale);
+trails.attachTo(scene);
 
 document.getElementById("btn-fps")?.addEventListener("click", () => {
   if (fps.active) {
@@ -659,6 +683,9 @@ if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
     bloomComposer,
     applyTrueScale,
     getWorldScale,
+    cinematic,
+    trails,
+    telemetry,
   };
 }
 
@@ -694,6 +721,12 @@ if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
   // body's ring as the beacon.
   pathFader.update(fakeCamera.getWorldPosition(pathFaderCameraPos));
 
+  // Animate the orbit-ring dash drift (travel-direction flow) and record
+  // the motion trails' new world positions.
+  updateOrbitFlow(elapsedTime);
+  trails.setEnabled(options.showTrails);
+  trails.update();
+
   // Update sim date HUD (throttled).
   // The clock is seeded to the real current date (see initialElapsedTime) —
   // the same instant the ephemeris placed the planets at — so the HUD date
@@ -709,6 +742,36 @@ if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
     )}-${pad(simDate.getUTCDate())} ${pad(simDate.getUTCHours())}:${pad(
       simDate.getUTCMinutes()
     )} UTC`;
+
+    // Telemetry readout — camera→focus distance (calibrated to km at the
+    // focus body's own heliocentric ratio in view mode; exact in true
+    // scale), mean orbital velocity from planets.json, on-screen scale.
+    const focusObject = solarSystem[options.focus];
+    focusObject.mesh.getWorldPosition(telFocusPos);
+    camera.getWorldPosition(telCamPos);
+    const kmPerUnit = computeKmPerUnit(
+      options.focus,
+      options.trueScale,
+      (name) => {
+        const object = solarSystem[name];
+        if (!object) return undefined;
+        object.mesh.getWorldPosition(telResolvePos);
+        return { distanceKm: object.distanceKm, worldR: telResolvePos.length() };
+      }
+    );
+    const focusBodyData = focusObject.mesh.userData.body as Body;
+    const velocityKmS =
+      focusBodyData.period > 0 && focusBodyData.distance
+        ? (2 * Math.PI * focusBodyData.distance * 1e6) /
+          (focusBodyData.period * 86400)
+        : NaN;
+    telemetry.update({
+      worldDistance: telCamPos.distanceTo(telFocusPos),
+      kmPerUnit,
+      viewportHeight: sizes.height,
+      fovDeg: camera.fov,
+      orbitalVelocityKmS: velocityKmS,
+    });
   }
 
   // Free-roam flight or the detached free camera drive the fake camera

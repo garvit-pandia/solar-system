@@ -26,6 +26,64 @@
   user-select: none;
 }
 
+/* Live telemetry strip — sits under the sim-date chip, same glass idiom.
+   Values update on the 500 ms throttle; hidden on phones (clutter). */
+#telemetry {
+  position: fixed;
+  top: 3.3rem;
+  left: 4.5rem;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: $font;
+  font-size: 0.62rem;
+  font-weight: 200;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  color: $text-55;
+  background: $panel-bg;
+  backdrop-filter: $panel-blur;
+  -webkit-backdrop-filter: $panel-blur;
+  border: $hairline;
+  border-radius: $radius-pill;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  padding: 0.34rem 0.85rem;
+  pointer-events: none;
+  user-select: none;
+
+  .tel-item {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.35rem;
+  }
+
+  .tel-label {
+    font-size: 0.53rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: $text-45;
+  }
+
+  .tel-value {
+    font-weight: 500;
+    color: $text-92;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tel-sep {
+    width: 1px;
+    height: 0.7rem;
+    background: rgba(255, 255, 255, 0.14);
+  }
+}
+
+@media (max-width: 620px) {
+  #telemetry {
+    display: none;
+  }
+}
+
 #planet-tooltip {
   position: fixed;
   z-index: 12;

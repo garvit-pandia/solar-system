@@ -74,6 +74,8 @@
       <button id="btn-tour" class="tool-btn" aria-label="Cinematic tour" data-tooltip="Cinematic tour — Sun to Neptune"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10.2 8.6v6.8l5.6-3.4z"/></svg><span class="tool-label">Tour</span></button>
       <button id="btn-quiz" class="tool-btn" aria-label="Planet quiz" data-tooltip="Planet quiz"><svg viewBox="0 0 24 24"><path d="M9.2 17.2h5.6"/><path d="M10.2 20h3.6"/><path d="M12 3.2a6.2 6.2 0 0 0-3.7 11.2c.7.6 1.1 1.4 1.1 2.3h5.2c0-.9.4-1.7 1.1-2.3A6.2 6.2 0 0 0 12 3.2z"/></svg><span class="tool-label">Quiz</span></button>
       <span class="toolbar-sep" aria-hidden="true"></span>
+      <button id="btn-cinematic" class="tool-btn" aria-label="Cinematic mode" aria-pressed="false" data-tooltip="Cinematic mode — hide UI (H)"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9.5h4M3 14.5h4M17 9.5h4M17 14.5h4"/></svg><span class="tool-label">Cinematic</span></button>
+      <span class="toolbar-sep" aria-hidden="true"></span>
       <button id="btn-settings" class="tool-btn" aria-label="Simulation settings" data-tooltip="Simulation settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span class="tool-label">Settings</span></button>
       <button id="btn-help" class="tool-btn" aria-label="Help" data-tooltip="Controls &amp; features"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.8 9.3a2.3 2.3 0 1 1 3.3 2.1c-.8.4-1.2 1-1.2 1.9"/><path d="M12 16.9h.01"/></svg><span class="tool-label">Help</span></button>
       <a
@@ -140,6 +142,15 @@
     <div id="tooltip"></div>
 
     <div id="sim-date"></div>
+    <div id="telemetry">
+      <span class="tel-item"><span class="tel-label">Dist</span><span class="tel-value" id="tel-dist"></span></span>
+      <span class="tel-sep" aria-hidden="true"></span>
+      <span class="tel-item"><span class="tel-label">Vel</span><span class="tel-value" id="tel-vel"></span></span>
+      <span class="tel-sep" aria-hidden="true"></span>
+      <span class="tel-item"><span class="tel-label">Scale</span><span class="tel-value" id="tel-scale"></span></span>
+      <span class="tel-sep" aria-hidden="true"></span>
+      <span class="tel-item"><span class="tel-label">Rate</span><span class="tel-value" id="tel-rate"></span></span>
+    </div>
     <div id="planet-tooltip"></div>
 
     <div id="nav-palette" hidden>
@@ -203,6 +214,7 @@
             <li><b>Speed Preset</b> — quick time speeds: ×0.125, ×1, ×10, ×100.</li>
             <li><b>Reverse Time</b> — run the clock backwards.</li>
             <li><b>Speed</b> — fine-grained speed slider (0.05× to 200×).</li>
+            <li><b>Motion Trails</b> — fading comet-tails behind every planet and dwarf planet.</li>
             <li><b>True Scale</b> — real sizes <i>and</i> real distances (1 unit = Earth's radius). The Sun becomes 109× Earth and space becomes vast — use the planet buttons or clicks to travel.</li>
             <li><b>Asteroid Belt</b> — the main belt between Mars and Jupiter.</li>
             <li><b>Kuiper Belt</b> — the icy outer belt beyond Neptune (30–50 AU, home of Pluto, Eris, Makemake and Haumea).</li>
@@ -220,6 +232,8 @@
             <li><b>Free Roam</b> — first-person flight; WASD to move, move the mouse over the 3D view to look (toolbar stays clickable), Space/C up &amp; down, Shift boost, scroll speed, Esc to exit. <i>Exiting leaves the camera in place — no planet is selected (free-camera mode: drag to look, scroll to dolly); re-entering continues from the same spot.</i></li>
             <li><b>Tour</b> — cinematic flight Sun → Neptune.</li>
             <li><b>Quiz</b> — 6 questions; pick an option below the question or click the planet in 3D.</li>
+            <li><b>Cinematic (H)</b> — fades out every UI layer and slides in letterbox bars for clean viewing; a small floating chip stays for screenshots and exit.</li>
+            <li><b>Screenshot (P)</b> — saves the current view as a PNG, with or without cinematic mode.</li>
             <li><b>Settings</b> — the full simulation control panel.</li>
             <li><b>Help</b> — this reference.</li>
             <li><b>GitHub</b> — the author's profile.</li>
@@ -232,7 +246,9 @@
             Top-left HUD shows the simulated date. It starts at the real
             current date — the same positions the planets are placed at — and
             advances 8 hours per real second at ×1 speed, respecting pause and
-            reverse. Times are UTC.
+            reverse. Times are UTC. The telemetry strip beneath it shows live
+            numbers: distance to the focused body (AU/km), its mean orbital
+            velocity, the on-screen scale (1 px ≈ N km) and the sim rate.
           </p>
         </section>
 
@@ -265,6 +281,18 @@
         </div>
       </div>
     </div>
+
+    <div id="letterbox" aria-hidden="true">
+      <div class="lb-bar lb-top"></div>
+      <div class="lb-bar lb-bottom"></div>
+    </div>
+
+    <div id="cinematic-hud" hidden>
+      <button id="btn-screenshot" aria-label="Save screenshot" data-tooltip="Save PNG — P"><svg viewBox="0 0 24 24"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.7l1.2-1.8h5.2L15.8 6h1.7A2.5 2.5 0 0 1 20 8.5v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12.4" r="3.3"/></svg></button>
+      <button id="btn-cinematic-exit" aria-label="Exit cinematic mode" data-tooltip="Exit — H"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+
+    <div id="app-toast" role="status"></div>
 
     <script type="module" src="./script.ts"></script>
   </body>
