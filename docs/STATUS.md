@@ -1,104 +1,125 @@
-# STATUS — Polish, redesign & correctness round (2026-09-03)
+# STATUS — Feature rounds A/B/C complete (2026-09-03)
 
-State: COMPLETE (working tree, uncommitted) — typecheck ✓ · production build ✓ ·
-visually verified in-browser on desktop (1600×900) and mobile (390×844).
+State: rounds A, B and C of `docs/IMPROVEMENTS-REPORT.md` are implemented,
+verified and pushed to `origin/master`. typecheck ✓ · production build ✓ ·
+visually verified in-browser after each round. This round replaces the
+previous STATUS (the 2026-09-03 polish/redesign round — all of that work is
+in commit `6f209f7`).
 
-This round replaces the previous STATUS (the 2026-08-08 zoom/sim-date hotfix —
-superseded; those fixes are still in place).
+Commits: `a390e70` (Round A) · `68c76f2` + `0356707` (chore) · `b4dcce7`
+(Round B) · `63b0480` (assets) · `19a4bf4` (Round C).
 
-## 1. Tool rail (navbar) redesign + collapse
-- Replaced the 11-button top-center dock (icon + tiny label chips) with a
-  slim **left icon rail**: icon-only 40px buttons, hairline group separators,
-  active toggles marked by an amber edge dot instead of filled chips.
-  Tooltips open to the *right* of the rail (top-edge tooltips used to clip
-  off-screen).
-- **Collapsible**: chevron toggle at the top (or clicking the empty rail)
-  expands to icon+name rows; state persists in `localStorage`
-  (`solar-rail-expanded`); tooltips are suppressed while expanded; every
-  button got a proper `aria-label`.
-- Sim-date chip now sits beside the rail — deleted the `max-width: 2000px`
-  media-query hack that existed only because the old dock overlapped it.
-- Fixed a class collision: rail labels use `.tool-label` (`.label` is the
-  POI-chip style and was mis-centering the rail labels).
+## Round A — quick wins (report #6, #9, #5)
 
-## 2. Bug fixes
-- **Sim date was fiction**: the HUD started at J2000 (2000-01-01) while the
-  ephemeris placed planets at *today's* real positions. The clock is now
-  seeded with `initialElapsedTime` (ephemeris.ts) so the HUD starts at the
-  real current date and matches the sky. Help-panel text updated.
-- **Focus camera landed on the night side ~50% of the time** (Neptune looked
-  "broken" — a featureless black disc). `changeFocus` and the true-scale
-  snap now aim the camera from the Sun through the body
-  (`setDaysideCameraPosition` in script.ts).
-- **Asteroid-belt flicker**: per-rock z-scale was randomized *per frame*;
-  now precomputed per instance.
-- **Loading screen could hang forever** on a texture 404 — load errors now
-  count toward progress (textures.ts).
-- **Free-roam edge-look assist never engaged**: zero-delta mousemove events
-  (fired while the cursor is clamped at a screen edge) kept resetting the
-  idle timer. Only real motion re-arms it now; edge zone 10→26px; the UI
-  block only triggers on interactive elements. Verified with a real-input
-  drift test (pitch −0.41 → +0.49 while pinned at the top edge).
-- **Moon stylization guard** (`solar-system.ts`): √km radius scaling
-  inflated small moons (Moon at 53% of Earth's radius — real 27%) and
-  parked Triton 2.1 Neptune-radii out, skimming the planet. Moons now clamp
-  to ⅓ parent radius; sibling orbits are re-spaced so they never overlap.
-  Raw km values untouched (info panel + true scale stay exact).
-- Smooth-gradient planets (Neptune, Uranus) showed 8-bit colour banding —
-  `dithering` enabled on planet/atmosphere/ring materials.
-- `getOrbitRotation` guarded on `daylength` instead of `period`.
-- `rebuildBloom` leaked a render target (now `bloomPass.dispose()`).
-- Hidden moons can no longer be clicked/hovered (visibility filter in
-  `findClickedBody`); hiding moons also hides their POI labels (CSS2D
-  ignores ancestor visibility).
-- GUI: Speed slider now syncs when a preset/reverse changes; dead
-  `zangle`/`yangle` options removed.
+- **Cinematic mode + one-click screenshot** (`setup/cinematic.ts`):
+  rail button or `H` fades every UI layer (CSS `body.cinematic`) and slides
+  in letterbox bars; a floating capture chip stays bottom-right. `P` or the
+  chip saves a PNG (`solar-system_<body>_<timestamp>.png`) by rendering
+  through the bloom composer and reading the framebuffer in the same task —
+  no `preserveDrawingBuffer`. Feedback via a bottom-center toast.
+- **Live telemetry HUD** (`setup/telemetry.ts`): glass strip under the sim
+  date — camera→focus distance (AU/km), focus mean orbital velocity (km/s,
+  from planets.json — Earth shows 29.8 ✓), on-screen scale ("1 px ≈ N km",
+  pinhole model), sim rate (×0.13 · 1.0 h/s format, reverse/pause aware).
+  km-per-unit is calibrated at the focused body's heliocentric ratio in view
+  mode and exact (1 unit = 6371 km) in true scale. Hidden ≤620px.
+- **Motion trails** (`setup/trail.ts`): fading comet-tails for all 13
+  Sun-orbiting bodies. Fixed-length ring buffers (160 pts) per body, ordered
+  draw buffer with black-faded colour ramp (additive blending), zero
+  per-frame allocations, raycast disabled, jump detection clears the tail on
+  mode switches. GUI toggle "Motion Trails" (default on).
+- **Orbit dash flow** (`setup/path.ts`): Sun-orbiting rings now use
+  `LineDashedMaterial` with an injected `uDashOffset` uniform animated in
+  the tick — dashes drift along the ring showing travel direction. Dash
+  pattern lives in the unit-geometry line-distance attribute, so it is
+  scale-independent (view/true-scale) and PathFader's opacity machinery is
+  untouched.
 
-## 3. Performance
-- Click/hover/zoom-probe raycasts walked the whole scene — including 10k
-  star Points and ~9k hidden belt instances. Belts + starfield + Milky Way
-  cap are now non-raycastable.
-- Belts no longer cast/receive shadows (sub-pixel rocks in a 6-face 2048²
-  point-light shadow map for nothing); `instanceMatrix.needsUpdate` set once
-  per mesh instead of per instance.
-- Removed per-frame allocations in `starfield.update` and `Label` opacity
-  math.
+## Round B — the science core (report #1)
 
-## 4. Visual / UX
-- Milky Way band: mottle noise softened (was reading as dirty grey smudges).
-- Loading screen: choreography cut from ~5s to <1s (spinner spins
-  immediately); loading overlay raised to z-index 100 (app UI was floating
-  ABOVE it).
-- Global CSS: `box-sizing: border-box` (panels were wider than declared),
-  `touch-action: none` on the canvas, `overscroll-behavior: none`,
-  `prefers-reduced-motion` support, page background (no white flash), meta
-  description / theme-color / color-scheme / `viewport-fit=cover`.
-- Tooltips flip below top-edge controls; hover tooltip clamps at the right
-  edge; caption buttons 34→40px touch targets.
-- Phone layout (≤620px): info panel becomes a bottom sheet; centered
-  overlays shift clear of the rail; the rail scrolls vertically if needed.
-- Help panel: close button sticky (it used to scroll away), Firefox
-  scrollbar styling, focus-visible rings on close buttons.
+- **Real Keplerian orbits** (`setup/ephemeris.ts` rewritten): JPL
+  "Approximate Positions of the Major Planets" Table 1 (J2000 elements +
+  per-century rates, valid 1800–2050) for the 8 planets + Pluto; Newton–
+  Raphson Kepler solver (JPL recipe). Positions are heliocentric ecliptic
+  AU mapped into the scene frame (Y-up, north ecliptic pole on +Y).
+- **Accuracy verified against JPL Horizons**: Earth @2026-09-05 09:00 —
+  solver 342.46°/1.0083 AU vs Horizons 342.47°/1.0081 AU (node replica of
+  the sim code matches the browser sim to 0.03°).
+- **Ecliptic frame fix**: the Sun's rig carried its axial tilt
+  (`rotation.x = 7.25°`), which silently tilted the whole orbital frame —
+  invisible before (circular orbits), wrong now. The Sun's rig no longer
+  tilts (its visual mesh still spins; planets' real inclinations are now
+  visible: Mercury +5.1°, Pluto −4.2° ecliptic latitude at load).
+- **Inclined ellipse orbit paths**: unit-ellipse geometry baked from the
+  elements (`orbitEllipsePointsAU`), scaled uniformly per mode — view mode
+  keeps the stylised √-compression (semi-major = stylised a), true scale
+  uses real 1-unit-per-Earth-radius. PathFader/dash-flow work unchanged.
+  Remaining dwarfs (Ceres, Eris, Makemake, Haumea) and moons keep stylised
+  circular orbits (documented in help).
+- **Time travel**: click the sim-date chip → glass popover with a UTC
+  datetime picker + "Now" + "Go" (range clamped 1800–2050 with a toast).
+  Writing the clock re-solves every Keplerian position on the next tick and
+  clears motion trails. HUD date and planet positions share one clock
+  (`simDateMsFromElapsed` / `elapsedFromSimDateMs`).
 
-## 5. Docs & repo hygiene
-- `AGENTS.md` created (architecture invariants + gotchas for agents).
-- `docs/IMPROVEMENTS-REPORT.md` — researched top-10 roadmap (Keplerian
-  orbits + time travel, real star sky, atmosphere shaders, KTX2 asset diet,
-  cinematic mode, procedural audio, …).
-- Deleted: `docs/superpowers/` (6 outdated plan/spec files), 17
-  unreferenced screenshots in `docs/screenshots/` (4.8MB → 1.7MB; README
-  keeps 7), root debris PNGs, `.playwright-mcp/`, `.superpowers/`.
-- TODO: README's screenshot gallery still shows the OLD toolbar — refresh
-  the images when convenient.
+## Round C — sensory (report #3, #4)
+
+- **Fresnel atmosphere rims**: additive back-side shells with a
+  `pow(0.62 − dot(N, viewZ), p)` falloff, tinted per world (Rayleigh-blue
+  Earth, creamy Venus, dusty Mars, faint haze on the gas giants, orange
+  smog on Titan). Earth keeps its rotating cloud sphere under the shell.
+- **Earth city lights**: NASA-Black-Marble-style night map (Solar System
+  Scope 2k nightmap, CC BY 4.0 — credited in `static/textures/CREDITS.md`)
+  injected into Earth's Phong material via `onBeforeCompile`; additive
+  city glow masked by a world-normal sun-direction smoothstep, sun
+  direction tracked per-frame. Best viewed with the ambient light dimmed
+  (toolbar night preset).
+- **Animated true-scale morph**: the True Scale toggle now tweens every
+  body's scale, activeDistance, path scale and AU-factor over 1.6 s
+  (ease-in-out cubic) instead of snapping — the Sun visibly swells while
+  orbits stream outward. `captureScaleState` / `applyScaleState` /
+  `lerpScaleState` in solar-system.ts; belts/bloom/far-plane flip
+  immediately; PathFader caches refresh at tween end. Annotation toast:
+  "True scale — the Sun is 109 × Earth · space is mostly emptiness".
+
+## Housekeeping
+
+- Screenshots from automated verification live in
+  `docs/screenshots/captures/` (tracked, one folder as requested).
+- `.gitignore` now covers `.tmp-stars/` (star-catalog working dir); the
+  34 MB temp CSV was removed from the repo after an over-eager `git add -A`.
+- `git config core.filemode false` — an external process on this machine
+  kept flipping `scripts/deploy-gh-pages.sh` between 644/755; the recorded
+  mode is now frozen at 755.
+- Data assets for the next round are already in-tree:
+  `static/data/stars.json` (8,913 HYG stars ≤ mag 6.5, RA/Dec/mag/B-V-RGB,
+  339 proper names) and `static/data/constellations.json` (88 IAU
+  constellations, 893 line points), generated by `scripts/build-stars.mjs`.
 
 ## Known-not-bugs (verified — do not re-chase)
+
+- The sim date mirrors the OS clock (seeded at page load). This machine's
+  clock has been observed jumping ~2 days between sessions — a jumping HUD
+  date is the OS clock, not a sim regression.
 - Occasional blank-canvas screenshots are in-app-browser capture artifacts;
   the framebuffer renders correctly every frame (verified via readback).
 - CUA keyboard events sometimes don't reach the page in the embedded
-  browser — drive controllers via the dev-only `window.__solar` hook
-  (e.g. `__solar.palette.onSelect("Neptune")`).
+  browser — drive controllers via `window.__solar` (now also exposes
+  `cinematic`, `trails`, `telemetry`, `timeTravel`).
+- The camera→focus distance in view mode (~2.7 AU at the Sun) is the honest
+  calibration at the focused body's orbit — view mode compresses distances
+  non-linearly (Mkm^0.4), so km-per-unit varies across the scene.
 
 ## Next (from docs/IMPROVEMENTS-REPORT.md)
-Quick wins: cinematic mode + screenshot (#6), procedural audio (#7),
-telemetry HUD (#9), motion trails (#5). Core: Keplerian orbits + time
-travel (#1).
+
+1. **Round D #2 — real star sky**: feed `stars.json` into the starfield
+   Points shader (RA/Dec → unit vectors, equatorial→ecliptic rotation by
+   ε=23.44°, magnitude→size/brightness), add constellation `LineSegments`
+   + GUI toggle. Data is ready and validated (Orion/Betelgeuse spot checks
+   correct).
+2. **Round D #8 — KTX2 asset diet**: convert static/textures JPGs (20 MB)
+   to KTX2/Basis + distance LOD. Needs `toktx`/gltf-transform tooling.
+3. **Round E #10 — alignment & eclipse detector**: angular-separation scan
+   over the (now real) positions every ~500 ms → toasts + "fly there".
+4. Final full pass as a user (rate every view, polish), refresh README
+   screenshots (still shows the old toolbar), STATUS update.
