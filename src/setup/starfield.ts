@@ -2,6 +2,47 @@ import * as THREE from "three";
 
 const STAR_COUNT = 10000;
 
+/**
+ * Real-sky constants. The star catalog (static/data/stars.json, generated
+ * from the HYG database by scripts/build-stars.mjs) and the constellation
+ * lines are equatorial (RA/Dec); the sim runs in the ecliptic frame, so
+ * directions rotate by the obliquity and then map into the scene frame —
+ * the exact same mapping ephemeris.ts uses for planet positions, which is
+ * what makes constellations line up with the real planetary positions.
+ */
+const OBLIQUITY = 23.4393 * (Math.PI / 180);
+const COS_EPS = Math.cos(OBLIQUITY);
+const SIN_EPS = Math.sin(OBLIQUITY);
+
+const skyDirection = (
+  raDeg: number,
+  decDeg: number,
+  out: THREE.Vector3
+): THREE.Vector3 => {
+  const ra = raDeg * (Math.PI / 180);
+  const dec = decDeg * (Math.PI / 180);
+  const xEq = Math.cos(dec) * Math.cos(ra);
+  const yEq = Math.sin(dec);
+  const zEq = Math.cos(dec) * Math.sin(ra);
+  const yE = yEq * COS_EPS + zEq * SIN_EPS;
+  const zE = -yEq * SIN_EPS + zEq * COS_EPS;
+  // Ecliptic → scene (Y up): (x, z, −y).
+  return out.set(xEq, zE, -yE);
+};
+
+interface StarRecord {
+  ra: number;
+  dec: number;
+  mag: number;
+  c: [number, number, number];
+}
+
+interface ConstellationRecord {
+  id: string;
+  name: string;
+  lines: [number, number][][]; // polylines of [ra, deg] points
+}
+
 // Temperature-inspired star palette: warm K/M dwarfs, orange, white,
 // blue-white and blue O/B stars.
 const STAR_PALETTE: [number, number, number][] = [
@@ -41,7 +82,11 @@ const vertexShader = /* glsl */ `
     // Subtle per-star twinkle: 72%..100% of the base brightness.
     float twinkle = 0.72 + 0.28 * sin(uTime * aSpeed + aPhase);
     vColor = aColor * twinkle;
-    gl_PointSize = uPixelRatio * (uStarScale * aSize) / max(-mvPosition.z, 0.001);
+    // Floor the sprite at ~1.3px: at shell distance the physical pinhole
+    // size of the faint majority computes below one pixel and the sky
+    // reads empty even though every star is in the buffer.
+    float pointSize = uPixelRatio * (uStarScale * aSize) / max(-mvPosition.z, 0.001);
+    gl_PointSize = max(pointSize, 1.3 * uPixelRatio);
     gl_Position = projectionMatrix * mvPosition;
   }
 `;
@@ -75,6 +120,9 @@ export class Starfield {
   private milkyWay: THREE.Mesh;
   private material: THREE.ShaderMaterial;
   private currentKey = "";
+  private constellations: THREE.LineSegments | null = null;
+  private constellationsVisible = true;
+  private realSkyLoaded = false;
 
   // Per-frame scratch (shared — update() runs once per frame).
   private static readonly tmpPosition = new THREE.Vector3();
@@ -214,14 +262,158 @@ export class Starfield {
     // Same as the stars: scenery, never a raycast target (the cap is a
     // ~6k-triangle mesh that would be triangle-tested on every click).
     cap.raycast = () => {};
-    // Fixed world orientation — the band stays put in the sky as the
-    // camera rotates; only its position follows the camera.
-    cap.rotation.set(0.55, 0.85, 0.45);
+    // Aligned to the REAL galactic plane: the cap's equator (local Y = 0)
+    // maps onto the Milky Way — pole at RA 192.86°/dec 27.13°, with the
+    // galactic centre (Sagittarius) at local +X. The band therefore runs
+    // through the same constellations it does in the real sky.
+    {
+      const pole = skyDirection(192.85948, 27.12825, new THREE.Vector3());
+      const center = skyDirection(266.405, -28.936, new THREE.Vector3());
+      const toward = center
+        .addScaledVector(pole, -center.dot(pole))
+        .normalize();
+      const third = new THREE.Vector3().crossVectors(toward, pole);
+      const basis = new THREE.Matrix4().makeBasis(toward, pole, third);
+      cap.quaternion.setFromRotationMatrix(basis);
+    }
     this.milkyWay = cap;
     this.group.add(cap);
 
     scene.add(this.group);
   }
+
+  /**
+   * Swap the procedural starfield for the real naked-eye sky (HYG catalog)
+   * and add the 88 IAU constellation line figures. Called asynchronously
+   * after construction; on any fetch/parse failure the procedural field
+   * stays (never blocks or breaks the app).
+   */
+  loadRealSky = async (): Promise<void> => {
+    if (this.realSkyLoaded) return;
+    let stars: StarRecord[];
+    let constellations: ConstellationRecord[];
+    try {
+      const base =
+        (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL ?? "/";
+      const [starRes, constRes] = await Promise.all([
+        fetch(`${base}data/stars.json`),
+        fetch(`${base}data/constellations.json`),
+      ]);
+      if (!starRes.ok || !constRes.ok) throw new Error("sky data fetch failed");
+      stars = ((await starRes.json()) as { stars: StarRecord[] }).stars;
+      constellations = (await constRes.json()).constellations;
+    } catch {
+      return; // offline / missing data — keep the procedural field
+    }
+
+    // --- Real stars ---------------------------------------------------
+    const n = stars.length;
+    const positions = new Float32Array(n * 3);
+    const colors = new Float32Array(n * 3);
+    const sizes = new Float32Array(n);
+    const phases = new Float32Array(n);
+    const speeds = new Float32Array(n);
+    const dir = new THREE.Vector3();
+    let used = 0;
+    for (let i = 0; i < n; i++) {
+      const star = stars[i];
+      // The catalog includes the Sun (mag −26) — skip anything brighter
+      // than the planets' star, the scene has a real Sun mesh already.
+      if (star.mag < -10) continue;
+      skyDirection(star.ra, star.dec, dir);
+      positions[used * 3] = dir.x;
+      positions[used * 3 + 1] = dir.y;
+      positions[used * 3 + 2] = dir.z;
+
+      const t = Math.min(1, (6.5 - star.mag) / 8);
+      // Apparent magnitude → sprite size and brightness. The naked-eye
+      // catalog clusters at the faint end, so the floors are set high
+      // enough for the dim majority to read against the black sky while
+      // Sirius & co. still dominate.
+      sizes[used] = 0.6 + 2.4 * Math.pow(t, 2.0);
+      const brightness = 0.72 + 0.6 * Math.pow(t, 1.2);
+      colors[used * 3] = star.c[0] * brightness;
+      colors[used * 3 + 1] = star.c[1] * brightness;
+      colors[used * 3 + 2] = star.c[2] * brightness;
+
+      phases[used] = Math.random() * Math.PI * 2;
+      speeds[used] = 0.6 + Math.random() * 2.4;
+      used++;
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(positions.subarray(0, used * 3), 3)
+    );
+    geometry.setAttribute(
+      "aColor",
+      new THREE.BufferAttribute(colors.subarray(0, used * 3), 3)
+    );
+    geometry.setAttribute(
+      "aSize",
+      new THREE.BufferAttribute(sizes.subarray(0, used), 1)
+    );
+    geometry.setAttribute(
+      "aPhase",
+      new THREE.BufferAttribute(phases.subarray(0, used), 1)
+    );
+    geometry.setAttribute(
+      "aSpeed",
+      new THREE.BufferAttribute(speeds.subarray(0, used), 1)
+    );
+
+    const previous = this.stars.geometry;
+    this.stars.geometry = geometry;
+    previous.dispose();
+    this.realSkyLoaded = true;
+
+    // --- Constellation figures ----------------------------------------
+    this.constellations = this.buildConstellations(constellations);
+    this.constellations.visible = this.constellationsVisible;
+    this.group.add(this.constellations);
+  };
+
+  private buildConstellations(
+    constellations: ConstellationRecord[]
+  ): THREE.LineSegments {
+    const points: number[] = [];
+    const a = new THREE.Vector3();
+    const b = new THREE.Vector3();
+    for (const constellation of constellations) {
+      for (const polyline of constellation.lines) {
+        for (let k = 0; k < polyline.length - 1; k++) {
+          skyDirection(polyline[k][0], polyline[k][1], a);
+          skyDirection(polyline[k + 1][0], polyline[k + 1][1], b);
+          points.push(a.x, a.y, a.z, b.x, b.y, b.z);
+        }
+      }
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(new Float32Array(points), 3)
+    );
+    const material = new THREE.LineBasicMaterial({
+      color: 0x8fa4d8,
+      transparent: true,
+      opacity: 0.22,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    const lines = new THREE.LineSegments(geometry, material);
+    lines.frustumCulled = false;
+    // Scenery rule — never a raycast target.
+    lines.raycast = () => {};
+    return lines;
+  }
+
+  /** Toggle the constellation figures (guard against per-frame writes). */
+  setConstellationsVisible = (visible: boolean): void => {
+    if (this.constellationsVisible === visible) return;
+    this.constellationsVisible = visible;
+    if (this.constellations) this.constellations.visible = visible;
+  };
 
   /**
    * Center the shell on the camera and rescale when the far plane or the
@@ -263,9 +455,13 @@ export class Starfield {
       // Star shell radius (world units) — the geometry is a unit sphere.
       this.stars.scale.setScalar(worldRadius);
       // Sprite sizes in view units: fixed fraction of the shell radius.
-      this.material.uniforms.uStarScale.value = viewRadius * 1.15;
+      // Scaled up well past the nominal pinhole size — at the physical
+      // scale the 8900 real stars render sub-pixel and the sky reads empty.
+      this.material.uniforms.uStarScale.value = viewRadius * 1.7;
       // Milky Way cap at the same shell radius (unit-sphere geometry).
       this.milkyWay.scale.setScalar(worldRadius);
+      // Constellation figures ride the same shell.
+      if (this.constellations) this.constellations.scale.setScalar(worldRadius);
     }
 
     this.material.uniforms.uTime.value = timeMs / 1000;

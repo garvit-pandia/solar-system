@@ -18,6 +18,7 @@ import {
 } from "./setup/solar-system";
 import type { ScaleSnapshot } from "./setup/solar-system";
 import { initialElapsedTime, simDateMsFromElapsed } from "./setup/ephemeris";
+import { enableKTX2 } from "./setup/textures";
 import {
   createGUI,
   options,
@@ -40,6 +41,7 @@ import { Cinematic, showToast } from "./setup/cinematic";
 import { MotionTrails } from "./setup/trail";
 import { createTelemetry, computeKmPerUnit } from "./setup/telemetry";
 import { TimeTravel } from "./setup/time-travel";
+import { EventScanner } from "./setup/events";
 import { updateOrbitFlow } from "./setup/path";
 
 THREE.ColorManagement.enabled = false;
@@ -82,6 +84,9 @@ scene.background = new THREE.Color(0x01030a);
 
 // Procedural starfield + Milky Way band (replaces the flat background).
 const starfield = createStarfield(scene);
+// Upgrade to the real sky (HYG catalog + 88 constellation figures) when the
+// data arrives; the procedural field stays as the offline fallback.
+void starfield.loadRealSky();
 
 // Lights
 const [ambientLight, pointLight] = createLights();
@@ -137,6 +142,20 @@ document.getElementById("btn-next")?.addEventListener("click", () => {
   changeFocus(options.focus, focus);
   options.focus = focus;
 });
+
+// Renderer — created BEFORE the solar system so the KTX2 support probe can
+// run against the GL context before any body loads its textures.
+const renderer = new THREE.WebGLRenderer({
+  canvas: canvas,
+  antialias: true,
+});
+
+renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+renderer.setSize(sizes.width, sizes.height);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+enableKTX2(renderer);
 
 // Solar system
 const [solarSystem, planetNames] = createSolarSystem(scene);
@@ -360,18 +379,6 @@ labelRenderer.setSize(sizes.width, sizes.height);
 document.body.appendChild(labelRenderer.domElement);
 // Named root so cinematic mode can fade the POI chips via CSS.
 labelRenderer.domElement.id = "label-layer";
-
-// Renderer
-const renderer = new THREE.WebGLRenderer({
-  canvas: canvas,
-  antialias: true,
-});
-
-renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
-renderer.setSize(sizes.width, sizes.height);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const renderScene = new RenderPass(scene, camera);
 
@@ -680,6 +687,21 @@ const timeTravel = new TimeTravel({
   },
 });
 
+// Observatory events — alignments, conjunctions, eclipses over the real
+// positions; "View" reuses the palette's select flow.
+const eventScanner = new EventScanner({
+  solarSystem,
+  getElapsed: () => elapsedTime,
+  onSelect: (name) => {
+    if (fps.active) fps.exit();
+    if (detached || options.focus !== name) {
+      changeFocus(options.focus, name);
+      options.focus = name;
+    }
+    infoPanel.open(solarSystem[name].mesh.userData.body);
+  },
+});
+
 fakeCamera.layers.enable(LAYERS.POILabel);
 
 // GUI
@@ -734,6 +756,7 @@ if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
     trails,
     telemetry,
     timeTravel,
+    eventScanner,
   };
 }
 
@@ -791,6 +814,7 @@ if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
   updateOrbitFlow(elapsedTime);
   trails.setEnabled(options.showTrails);
   trails.update();
+  starfield.setConstellationsVisible(options.showConstellations);
 
   // Update sim date HUD (throttled).
   // The clock is seeded to the real current date (see initialElapsedTime) —
@@ -798,6 +822,7 @@ if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
   // date and the sky always agree. At ×1 speed one real second = 8 simulated
   // hours, so a 365-day Earth year takes 1095 real seconds.
   const nowMs = performance.now();
+  eventScanner.update(nowMs);
   if (nowMs - lastSimDateUpdate > 500) {
     lastSimDateUpdate = nowMs;
     const simDate = new Date(simDateMsFromElapsed(elapsedTime));

@@ -1,5 +1,6 @@
 node_modules/
 dist/
+.tools/
 .tmp-stars/
 .playwright-mcp/
 .superpowers/

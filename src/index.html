@@ -224,6 +224,7 @@
             <li><b>Reverse Time</b> — run the clock backwards.</li>
             <li><b>Speed</b> — fine-grained speed slider (0.05× to 200×).</li>
             <li><b>Motion Trails</b> — fading comet-tails behind every planet and dwarf planet.</li>
+            <li><b>Constellations</b> — the 88 IAU constellation figures drawn over the real naked-eye star sky (Hipparcos/HYG catalog), aligned with the planets' real positions.</li>
             <li><b>True Scale</b> — real sizes <i>and</i> real distances (1 unit = Earth's radius). The Sun becomes 109× Earth and space becomes vast — use the planet buttons or clicks to travel.</li>
             <li><b>Asteroid Belt</b> — the main belt between Mars and Jupiter.</li>
             <li><b>Kuiper Belt</b> — the icy outer belt beyond Neptune (30–50 AU, home of Pluto, Eris, Makemake and Haumea).</li>
@@ -307,6 +308,15 @@
     </div>
 
     <div id="app-toast" role="status"></div>
+
+    <div id="event-toast" hidden>
+      <div class="event-text">
+        <b id="event-title"></b>
+        <span id="event-body"></span>
+      </div>
+      <button id="btn-event-view" class="event-btn">View</button>
+      <button id="btn-event-close" class="event-btn ghost" aria-label="Dismiss event">✕</button>
+    </div>
 
     <script type="module" src="./script.ts"></script>
   </body>

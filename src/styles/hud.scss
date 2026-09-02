@@ -192,3 +192,76 @@
     display: block;
   }
 }
+
+/* Observatory event toast — alignment / conjunction / eclipse notices. */
+#event-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 4.6rem;
+  z-index: 55;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  max-width: min(560px, calc(100vw - 6rem));
+  padding: 0.6rem 0.8rem 0.6rem 1.1rem;
+  background: $panel-bg-strong;
+  backdrop-filter: $panel-blur;
+  -webkit-backdrop-filter: $panel-blur;
+  border: 1px solid $accent-border;
+  border-radius: $radius-panel;
+  box-shadow: $panel-shadow, $accent-glow;
+
+  &[hidden] {
+    display: none;
+  }
+
+  .event-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+
+    b {
+      font-family: $font;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: $accent-text;
+      white-space: nowrap;
+    }
+
+    span {
+      font-family: $font;
+      font-size: 0.62rem;
+      font-weight: 200;
+      letter-spacing: 0.04em;
+      color: $text-72;
+      line-height: 1.45;
+    }
+  }
+
+  .event-btn {
+    @extend %glass-btn;
+    flex: none;
+    padding: 0.38rem 0.85rem;
+    font-size: 0.6rem;
+
+    &.ghost {
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      justify-content: center;
+      border: none;
+      background: transparent;
+      color: $text-45;
+
+      &:hover {
+        color: $text-92;
+        background: rgba(255, 255, 255, 0.08);
+        transform: none;
+      }
+    }
+  }
+}

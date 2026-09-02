@@ -29,6 +29,8 @@ export const options = {
   showKuiper: false,
   // Fading comet-tail trails behind planets & dwarfs (trail.ts)
   showTrails: true,
+  // 88 IAU constellation figures over the real star sky (starfield.ts)
+  showConstellations: true,
 };
 
 /** Remembered day-mode level, so the toolbar toggle returns to the user's
@@ -149,6 +151,9 @@ export const createGUI = (
 
   // Fading motion trails behind the planets & dwarf planets
   gui.add(options, "showTrails").name("Motion Trails");
+
+  // Constellation figures (real star sky)
+  gui.add(options, "showConstellations").name("Constellations");
 
   // True scale mode
   gui
