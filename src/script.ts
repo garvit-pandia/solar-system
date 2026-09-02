@@ -13,6 +13,7 @@ import {
   getWorldScale,
   TRUE_SCALE_VIEW_RANGE,
 } from "./setup/solar-system";
+import { initialElapsedTime } from "./setup/ephemeris";
 import {
   createGUI,
   options,
@@ -23,7 +24,7 @@ import { LAYERS } from "./constants";
 import { InfoPanel } from "./setup/info-panel";
 import { Tutorial } from "./setup/tutorial";
 import { HelpPanel } from "./setup/help-panel";
-import { Body } from "./setup/planetary-object";
+import { Body, PlanetaryObject } from "./setup/planetary-object";
 import { createAsteroidBelt, createKuiperBelt } from "./setup/asteroid-belt";
 import { NavPalette } from "./setup/nav-palette";
 import { Quiz } from "./setup/quiz";
@@ -38,12 +39,25 @@ THREE.ColorManagement.enabled = false;
 // mean longitudes, so the simulated date always matches the planet positions.
 const J2000_EPOCH = Date.UTC(2000, 0, 1, 12);
 
+const isEffectivelyVisible = (object: THREE.Object3D | null): boolean => {
+  while (object) {
+    if (!object.visible) return false;
+    object = object.parent;
+  }
+  return true;
+};
+
 const findClickedBody = (hits: THREE.Intersection[]): Body | null => {
   for (const hit of hits) {
     let object: THREE.Object3D | null = hit.object;
     while (object) {
       const body = object.userData.body as Body | undefined;
-      if (body) return body;
+      if (body) {
+        // The raycaster ignores visibility — skip bodies hidden by a GUI
+        // toggle (e.g. Show Moons off) and keep looking at the next hit.
+        if (isEffectivelyVisible(object)) return body;
+        break;
+      }
       object = object.parent;
     }
   }
@@ -227,8 +241,34 @@ const applyScaleMode = (enabled: boolean) => {
   if (!fps.active && !detached) {
     const object = solarSystem[options.focus];
     const minDistance = object.getMinDistance();
-    fakeCamera.position.set(minDistance, minDistance / 3, 0);
+    setDaysideCameraPosition(object, minDistance);
   }
+};
+
+// Land the focus camera on the DAYSIDE: the old fixed local offset ignored
+// where the Sun was, so ~half of all focus jumps opened on the night side —
+// a featureless black disc (Neptune looked "broken"). Aiming from the Sun
+// through the body guarantees a lit view.
+const focusAimPos = new THREE.Vector3();
+const sunDirLocal = new THREE.Vector3();
+const setDaysideCameraPosition = (
+  object: PlanetaryObject,
+  minDistance: number
+): void => {
+  const mesh = object.mesh;
+  mesh.updateWorldMatrix(true, false);
+  sunDirLocal.set(0, 0, 0);
+  mesh.worldToLocal(sunDirLocal);
+  if (sunDirLocal.lengthSq() > 1e-9) {
+    sunDirLocal.normalize();
+  } else {
+    // The Sun itself has no parent to aim from — keep the classic offset.
+    sunDirLocal.set(1, 0.33, 0).normalize();
+  }
+  fakeCamera.position
+    .copy(sunDirLocal)
+    .multiplyScalar(minDistance * 1.3)
+    .addScaledVector(new THREE.Vector3(0, 1, 0), minDistance * 0.45);
 };
 
 const changeFocus = (oldFocus: string, newFocus: string) => {
@@ -251,7 +291,7 @@ const changeFocus = (oldFocus: string, newFocus: string) => {
   const minDistance = object.getMinDistance();
   // Orbit centre = the body's local origin (its centre).
   controls.target.set(0, 0, 0);
-  fakeCamera.position.set(minDistance, minDistance / 3, 0);
+  setDaysideCameraPosition(object, minDistance);
   updateCameraLimits(newFocus);
   pathFader.applyFocus(newFocus);
   solarSystem[oldFocus].labels.hidePOI();
@@ -306,8 +346,7 @@ let bloomPass = new UnrealBloomPass(
 
 const rebuildBloom = (): void => {
   bloomComposer.removePass(bloomPass);
-  for (const target of bloomPass.renderTargetsHorizontal) target.dispose();
-  for (const target of bloomPass.renderTargetsVertical) target.dispose();
+  bloomPass.dispose();
   bloomPass = new UnrealBloomPass(
     new THREE.Vector2(sizes.width / 2, sizes.height / 2),
     bloomStrength,
@@ -462,6 +501,7 @@ fps.attach();
 const freeCamera = new FreeCamera({
   camera: fakeCamera,
   canvas,
+  scene,
   getZoomLimits: () =>
     options.trueScale
       ? { min: 2, max: TRUE_SCALE_VIEW_RANGE * 1.2 }
@@ -476,7 +516,6 @@ const pathFader = new PathFader({
   getFocus: () => options.focus,
 });
 const pathFaderCameraPos = new THREE.Vector3();
-const focusAimPos = new THREE.Vector3();
 
 document.getElementById("btn-fps")?.addEventListener("click", () => {
   if (fps.active) {
@@ -555,7 +594,8 @@ canvas.addEventListener("pointermove", (e) => {
   if (body) {
     planetTooltip.textContent = body.name;
     planetTooltip.style.display = "block";
-    planetTooltip.style.left = `${e.clientX}px`;
+    // Keep the chip on-screen near the right edge (it opens to the right).
+    planetTooltip.style.left = `${Math.min(e.clientX, sizes.width - 140)}px`;
     planetTooltip.style.top = `${e.clientY}px`;
   } else {
     planetTooltip.style.display = "none";
@@ -564,7 +604,10 @@ canvas.addEventListener("pointermove", (e) => {
 
 // Animate
 const clock = new THREE.Clock();
-let elapsedTime = 0;
+// Seed the clock with the real current date — the ephemeris placed every
+// planet at its mean longitude for TODAY, so the sim-date HUD must also
+// start at today to describe the same instant (see ephemeris.ts).
+let elapsedTime = initialElapsedTime;
 
 fakeCamera.layers.enable(LAYERS.POILabel);
 
@@ -652,11 +695,10 @@ if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
   pathFader.update(fakeCamera.getWorldPosition(pathFaderCameraPos));
 
   // Update sim date HUD (throttled).
-  // The ephemeris places every planet from its J2000 mean longitude, so the
-  // simulated clock must also start at the J2000 epoch (2000-01-01T12:00Z) —
-  // otherwise the shown date drifts from the actual planet positions.
-  // At ×1 speed one real second = 8 simulated hours (= 86400000/3 ms), so a
-  // 365-day Earth year takes 1095 real seconds.
+  // The clock is seeded to the real current date (see initialElapsedTime) —
+  // the same instant the ephemeris placed the planets at — so the HUD date
+  // and the sky always agree. At ×1 speed one real second = 8 simulated
+  // hours, so a 365-day Earth year takes 1095 real seconds.
   const nowMs = performance.now();
   if (nowMs - lastSimDateUpdate > 500) {
     lastSimDateUpdate = nowMs;

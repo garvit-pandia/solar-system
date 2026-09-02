@@ -6,8 +6,9 @@
 
 #sim-date {
   position: fixed;
-  top: 1rem;
-  left: 1.5rem;
+  /* Sits right of the tool rail (rail right edge ≈ 3.5rem). */
+  top: 1.2rem;
+  left: 4.5rem;
   z-index: 8;
   font-family: $font;
   font-size: 0.68rem;
@@ -23,16 +24,6 @@
   padding: 0.4rem 0.9rem;
   pointer-events: none;
   user-select: none;
-}
-
-/* The 11-button dock is ~1300px wide, so up to ~2000px viewports it
-   reaches the left corner and would cover this chip (the dock has the
-   higher z-index). Below that width the chip parks under the dock
-   instead — same top-left readout, no overlap at any size. */
-@media (max-width: 2000px) {
-  #sim-date {
-    top: 5.5rem;
-  }
 }
 
 #planet-tooltip {

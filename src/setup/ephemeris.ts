@@ -6,6 +6,16 @@ const MILLISECONDS_PER_DAY = 86400000;
 // Computed once at module load, so it is deterministic within a session.
 const daysSinceJ2000 = (Date.now() - J2000_EPOCH) / MILLISECONDS_PER_DAY;
 
+/**
+ * Initial value for the simulation clock, in elapsed-time units, so the
+ * clock starts at the REAL current date. The ephemeris below places every
+ * planet at its mean longitude for `daysSinceJ2000`; at ×1 speed one
+ * elapsed unit = 8 sim hours (planetary-object.ts timeFactor), i.e. 3 units
+ * per sim day — seeding the clock with daysSinceJ2000 × 3 keeps the HUD
+ * date and the planet positions describing the same instant ("now").
+ */
+export const initialElapsedTime = daysSinceJ2000 * 3;
+
 // Mean longitude at the J2000 epoch, in degrees, for the eight planets.
 const MEAN_LONGITUDE_AT_EPOCH: Record<string, number> = {
   Mercury: 252.25084,

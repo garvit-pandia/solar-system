@@ -6,10 +6,12 @@
 
 #info-panel {
   position: fixed;
-  left: 1.5rem;
+  /* Aligned just right of the tool rail so the two read as one
+     docked column on the left edge. */
+  left: 4.25rem;
   bottom: 1.5rem;
   z-index: 9;
-  width: 264px;
+  width: min(264px, calc(100vw - 3rem));
   padding: 1.1rem 1.2rem;
   @extend %glass-panel;
   color: white;
@@ -48,11 +50,18 @@
     color: $text-45;
     cursor: pointer;
     font-size: 0.9rem;
-    padding: 0 0.2rem;
+    padding: 0.2rem 0.4rem;
+    margin: -0.2rem -0.4rem;
     transition: color 0.15s ease;
 
     &:hover {
       color: white;
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgba($accent, 0.7);
+      outline-offset: 1px;
+      border-radius: 4px;
     }
   }
 
@@ -84,5 +93,16 @@
     font-style: italic;
     color: $text-60;
     line-height: 1.5;
+  }
+}
+
+/* Phone layout: the card becomes a bottom sheet so it never covers the
+   caption pill or overflows narrow screens. */
+@media (max-width: 620px) {
+  #info-panel {
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 4.6rem;
+    width: auto;
   }
 }

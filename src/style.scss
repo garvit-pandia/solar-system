@@ -14,11 +14,14 @@
 * {
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
 }
 
 html,
 body {
   overflow: hidden;
+  overscroll-behavior: none;
+  background: #04050c;
   font-family: "Trispace", sans-serif;
 }
 
@@ -27,8 +30,43 @@ body {
   top: 0;
   left: 0;
   outline: none;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 canvas {
   display: block;
+}
+
+// Toggle hover lifts only on devices that actually hover.
+@media (hover: none) {
+  .tool-btn,
+  .caption button {
+    transform: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Small screens: nudge centred overlays right of the tool rail so the
+   rail never covers their text. */
+@media (max-width: 620px) {
+  #welcome-card,
+  #quiz-card,
+  #nav-palette .palette-card {
+    left: calc(50% + 1.75rem);
+    max-width: calc(100vw - 5.5rem);
+  }
+
+  #help-panel {
+    padding-left: 4.5rem;
+  }
 }

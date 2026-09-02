@@ -1,4 +1,5 @@
-import { PlanetaryObject, EARTH_RADIUS_KM, RING_OUTER_KM } from "./planetary-object";
+import { PlanetaryObject, EARTH_RADIUS_KM, RING_OUTER_KM, normaliseRadius, normaliseDistance } from "./planetary-object";
+import type { StylisedValues } from "./planetary-object";
 import { initialOrbitAngle } from "./ephemeris";
 import planetData from "../planets.json";
 import { Body } from "./planetary-object";
@@ -10,12 +11,60 @@ export type SolarSystem = Record<string, PlanetaryObject>;
 /** True-scale world extent cap when zooming out, in Earth radii. */
 export const TRUE_SCALE_VIEW_RANGE = 120000;
 
-/**
- * World-space scale of each body (product of mesh scales up the hierarchy,
+/** World-space scale of each body (product of mesh scales up the hierarchy,
  * including the Sun root). Updated by applyTrueScale; valid only while the
- * solar system is static (i.e. not during mode switches).
- */
+ * solar system is static (i.e. not during mode switches). */
 const worldScales: Record<string, number> = {};
+
+/**
+ * View-mode moon guard.
+ *
+ * The stylised radius (√km) massively inflates small bodies — Earth's Moon
+ * renders at 53% of Earth's radius (real: 27%) and Charon at 71% of Pluto —
+ * and the stylised orbit distance (km^0.4) parks big moons right on their
+ * parent's shoulder (Triton skims 2.1 Neptune radii out), which reads as
+ * broken. Clamp each moon's stylised radius and re-space sibling orbits so
+ * they never overlap. Raw km values are untouched (info panel + true scale).
+ */
+const computeMoonStyling = (planets: Body[]): Map<string, StylisedValues> => {
+  const styling = new Map<string, StylisedValues>();
+
+  const byParent = new Map<string, Body[]>();
+  for (const body of planets) {
+    if (body.type !== "moon" || !body.orbits) continue;
+    const list = byParent.get(body.orbits) ?? [];
+    list.push(body);
+    byParent.set(body.orbits, list);
+  }
+
+  for (const [parentName, moons] of byParent) {
+    const parent = planets.find((p) => p.name === parentName);
+    if (!parent) continue;
+    const parentRadius = normaliseRadius(parent.radius);
+
+    let prevDistance = 0;
+    let prevRadius = 0;
+    const sorted = [...moons].sort((a, b) => a.distance - b.distance);
+    for (const moon of sorted) {
+      const radius = Math.min(
+        normaliseRadius(moon.radius),
+        parentRadius / 3
+      );
+      const distance = Math.max(
+        normaliseDistance(moon.distance),
+        // Keep clear of the parent and of the previous sibling's orbit
+        // (both inflated by the same stylisation, so compare stylised units).
+        parentRadius * 2.5,
+        prevDistance + 4 * (radius + prevRadius)
+      );
+      styling.set(moon.name, { radius, distance });
+      prevDistance = distance;
+      prevRadius = radius;
+    }
+  }
+
+  return styling;
+};
 
 export const createSolarSystem = (
   scene: THREE.Scene
@@ -25,6 +74,7 @@ export const createSolarSystem = (
 
   const planets: Body[] = planetData;
   const traversable: string[] = [];
+  const moonStyling = computeMoonStyling(planets);
 
   for (const planet of planets) {
     const name = planet.name;
@@ -33,7 +83,7 @@ export const createSolarSystem = (
       planet.period = planet.daylength / solarSystem[planet.orbits].daylength;
     }
 
-    const object = new PlanetaryObject(planet);
+    const object = new PlanetaryObject(planet, moonStyling.get(name));
 
     if (planet.type === "planet") {
       const angle = initialOrbitAngle(planet.name);

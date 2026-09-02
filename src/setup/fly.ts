@@ -13,8 +13,10 @@ const EDGE_IDLE_MS = 140;
 const EDGE_RAMP_MS = 350;
 /** Edge-look assist: max drift speed (rad/s). */
 const EDGE_DRIFT_RATE = 0.8;
-/** Distance from a viewport edge that counts as "at the edge" (px). */
-const EDGE_MARGIN = 10;
+/** Distance from a viewport edge that counts as "at the edge" (px). The
+ *  old 10px band was nearly impossible to hold — especially with the
+ *  cursor hidden during flight. */
+const EDGE_MARGIN = 26;
 /** World-space up vector (Space/C motion stays vertical while flying). */
 const WORLD_UP = new THREE.Vector3(0, 1, 0);
 
@@ -121,11 +123,15 @@ export class FreeRoam {
   private onMouseMove = (e: MouseEvent): void => {
     this.cursorX = e.clientX;
     this.cursorY = e.clientY;
-    this.lastMoveTime = performance.now();
-    // Remember the direction of the last REAL mouse motion — used by the
-    // edge-look assist to know which way the user was heading when the
-    // cursor pinned against the screen edge.
+    // Only REAL motion re-arms the idle timer. While the cursor is clamped
+    // against a screen edge, browsers keep delivering zero-delta mousemove
+    // events — resetting the timer on those would mean the "cursor parked
+    // at the edge" state is never reached and the assist never engages.
     if (e.movementX !== 0 || e.movementY !== 0) {
+      this.lastMoveTime = performance.now();
+      // Remember the direction of the last REAL mouse motion — used by the
+      // edge-look assist to know which way the user was heading when the
+      // cursor pinned against the screen edge.
       this.lastDirX = Math.sign(e.movementX);
       this.lastDirY = Math.sign(e.movementY);
     }
@@ -200,10 +206,18 @@ export class FreeRoam {
     const atLeft = this.cursorX <= EDGE_MARGIN && this.lastDirX < 0;
     const atRight = this.cursorX >= innerWidth - EDGE_MARGIN && this.lastDirX > 0;
     if (!atTop && !atBottom && !atLeft && !atRight) return false;
-    // Never drift while the cursor rests on the toolbar or any other UI
-    // element that sits above the canvas.
+    // Block the drift only when the cursor rests on something
+    // INTERACTIVE — buttons and panels along the edges (the tool rail,
+    // caption pill, settings panel). Plain glass chrome over the scene
+    // (e.g. the HUD chips) is pointer-events:none, so it never shows up
+    // here and must not disable edge-look.
     const topEl = document.elementFromPoint(this.cursorX, this.cursorY);
-    return !!topEl && (topEl === this.canvas || this.canvas.contains(topEl));
+    return (
+      !!topEl &&
+      !topEl.closest(
+        "button, a, input, select, textarea, .toolbar, .caption, .lil-gui, #nav-palette, #info-panel, #help-panel, #quiz-card, #welcome-card"
+      )
+    );
   }
 
   /**

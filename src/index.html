@@ -2,7 +2,16 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta
+      name="description"
+      content="An interactive 3D model of the solar system — orbit the planets, fly in first person, run the cinematic tour and explore real NASA data at true scale."
+    />
+    <meta name="theme-color" content="#04050c" />
+    <meta name="color-scheme" content="dark" />
     <title>Solar System Model</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -48,62 +57,34 @@
       </div>
     </div>
     <canvas class="webgl"></canvas>
-    <div class="toolbar" role="toolbar" aria-label="Controls">
-      <button id="btn-search" class="tool-btn" aria-label="Search" data-tooltip="Search (Ctrl+K)">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20.5 20.5-4.6-4.6"/></svg>
-        <span class="label">Search</span>
+    <div class="toolbar" role="toolbar" aria-label="Controls" aria-orientation="vertical">
+      <button id="btn-rail-toggle" class="tool-btn rail-toggle" aria-label="Expand tool names" aria-expanded="false" data-tooltip="Expand tool names">
+        <svg viewBox="0 0 24 24" class="chevron"><path d="m14.5 5.5-6.5 6.5 6.5 6.5"/></svg>
+        <span class="tool-label">Hide Names</span>
       </button>
       <span class="toolbar-sep" aria-hidden="true"></span>
-      <button id="btn-planet-paths" class="tool-btn" aria-pressed="true" data-tooltip="Orbit rings of the planets around the Sun">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.6"/><ellipse cx="12" cy="12" rx="9.3" ry="3.6"/></svg>
-        <span class="label">Planet Orbits</span>
-      </button>
-      <button id="btn-moon-paths" class="tool-btn" aria-pressed="true" data-tooltip="Orbit rings of the moons around their planets">
-        <svg viewBox="0 0 24 24"><circle cx="8" cy="12" r="2.3"/><circle cx="17" cy="12" r="4.3"/><ellipse cx="17" cy="12" rx="2.9" ry="1.3"/></svg>
-        <span class="label">Moon Orbits</span>
-      </button>
+      <button id="btn-search" class="tool-btn" aria-label="Search" data-tooltip="Search — Ctrl+K"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20.5 20.5-4.6-4.6"/></svg><span class="tool-label">Search</span></button>
       <span class="toolbar-sep" aria-hidden="true"></span>
-      <button id="btn-ambient" class="tool-btn" aria-pressed="true" data-tooltip="Ambient light — day / night">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg>
-        <span class="label">Ambient</span>
-      </button>
-      <button id="btn-labels" class="tool-btn" aria-pressed="true" data-tooltip="Points of interest on planets">
-        <svg viewBox="0 0 24 24"><path d="M12 21.2S5.6 16 5.6 10.9a6.4 6.4 0 0 1 12.8 0C18.4 16 12 21.2 12 21.2z"/><circle cx="12" cy="10.6" r="2.4"/></svg>
-        <span class="label">Labels</span>
-      </button>
+      <button id="btn-planet-paths" class="tool-btn" aria-label="Planet orbits" aria-pressed="true" data-tooltip="Planet orbit rings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.6"/><ellipse cx="12" cy="12" rx="9.3" ry="3.6"/></svg><span class="tool-label">Planet Orbits</span></button>
+      <button id="btn-moon-paths" class="tool-btn" aria-label="Moon orbits" aria-pressed="true" data-tooltip="Moon orbit rings"><svg viewBox="0 0 24 24"><circle cx="8" cy="12" r="2.3"/><circle cx="17" cy="12" r="4.3"/><ellipse cx="17" cy="12" rx="2.9" ry="1.3"/></svg><span class="tool-label">Moon Orbits</span></button>
+      <button id="btn-ambient" class="tool-btn" aria-label="Ambient light" aria-pressed="true" data-tooltip="Ambient light — day / night"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg><span class="tool-label">Ambient Light</span></button>
+      <button id="btn-labels" class="tool-btn" aria-label="Points of interest" aria-pressed="true" data-tooltip="Points of interest on planets"><svg viewBox="0 0 24 24"><path d="M12 21.2S5.6 16 5.6 10.9a6.4 6.4 0 0 1 12.8 0C18.4 16 12 21.2 12 21.2z"/><circle cx="12" cy="10.6" r="2.4"/></svg><span class="tool-label">Labels</span></button>
       <span class="toolbar-sep" aria-hidden="true"></span>
-      <button id="btn-fps" class="tool-btn" aria-label="Free roam" data-tooltip="Free roam (FPS) — exiting leaves the camera in place (free camera mode)">
-        <svg viewBox="0 0 24 24"><path d="M12.2 15.7c-3.2-1.2-5.1-4.2-4.6-8.1l3.2-3.6a9.6 9.6 0 0 1 8.5-1.6 9.6 9.6 0 0 1-1.6 8.5l-3.6 3.2c-1.3 1-2.9 1.6-3.9 1.6z"/><circle cx="14.9" cy="9.1" r="1.35"/><path d="M9.6 9.9 4.9 13.2l1.9.8-.8 2.3 2.3-.8.8 1.9 3.3-4.7"/></svg>
-        <span class="label">Free Roam</span>
-      </button>
-      <button id="btn-tour" class="tool-btn" data-tooltip="Auto tour">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10.2 8.6v6.8l5.6-3.4z"/></svg>
-        <span class="label">Tour</span>
-      </button>
-      <button id="btn-quiz" class="tool-btn" data-tooltip="Planet quiz">
-        <svg viewBox="0 0 24 24"><path d="M9.2 17.2h5.6"/><path d="M10.2 20h3.6"/><path d="M12 3.2a6.2 6.2 0 0 0-3.7 11.2c.7.6 1.1 1.4 1.1 2.3h5.2c0-.9.4-1.7 1.1-2.3A6.2 6.2 0 0 0 12 3.2z"/></svg>
-        <span class="label">Quiz</span>
-      </button>
+      <button id="btn-fps" class="tool-btn" aria-label="Free roam" data-tooltip="Free roam flight — WASD + mouse"><svg viewBox="0 0 24 24"><path d="M12.2 15.7c-3.2-1.2-5.1-4.2-4.6-8.1l3.2-3.6a9.6 9.6 0 0 1 8.5-1.6 9.6 9.6 0 0 1-1.6 8.5l-3.6 3.2c-1.3 1-2.9 1.6-3.9 1.6z"/><circle cx="14.9" cy="9.1" r="1.35"/><path d="M9.6 9.9 4.9 13.2l1.9.8-.8 2.3 2.3-.8.8 1.9 3.3-4.7"/></svg><span class="tool-label">Free Roam</span></button>
+      <button id="btn-tour" class="tool-btn" aria-label="Cinematic tour" data-tooltip="Cinematic tour — Sun to Neptune"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10.2 8.6v6.8l5.6-3.4z"/></svg><span class="tool-label">Tour</span></button>
+      <button id="btn-quiz" class="tool-btn" aria-label="Planet quiz" data-tooltip="Planet quiz"><svg viewBox="0 0 24 24"><path d="M9.2 17.2h5.6"/><path d="M10.2 20h3.6"/><path d="M12 3.2a6.2 6.2 0 0 0-3.7 11.2c.7.6 1.1 1.4 1.1 2.3h5.2c0-.9.4-1.7 1.1-2.3A6.2 6.2 0 0 0 12 3.2z"/></svg><span class="tool-label">Quiz</span></button>
       <span class="toolbar-sep" aria-hidden="true"></span>
-      <button id="btn-settings" class="tool-btn" data-tooltip="Simulation settings">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        <span class="label">Settings</span>
-      </button>
-      <button id="btn-help" class="tool-btn" data-tooltip="Help">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.8 9.3a2.3 2.3 0 1 1 3.3 2.1c-.8.4-1.2 1-1.2 1.9"/><path d="M12 16.9h.01"/></svg>
-        <span class="label">Help</span>
-      </button>
+      <button id="btn-settings" class="tool-btn" aria-label="Simulation settings" data-tooltip="Simulation settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span class="tool-label">Settings</span></button>
+      <button id="btn-help" class="tool-btn" aria-label="Help" data-tooltip="Controls &amp; features"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.8 9.3a2.3 2.3 0 1 1 3.3 2.1c-.8.4-1.2 1-1.2 1.9"/><path d="M12 16.9h.01"/></svg><span class="tool-label">Help</span></button>
       <a
         id="btn-github"
         class="tool-btn"
         href="https://github.com/garvit-pandia"
         target="_blank"
         rel="noopener"
+        aria-label="GitHub"
         data-tooltip="Garvit's GitHub"
-      >
-        <svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
-        <span class="label">GitHub</span>
-      </a>
+      ><svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg><span class="tool-label">GitHub</span></a>
     </div>
     <div class="caption">
       <button id="btn-previous" data-tooltip="Previous body">
@@ -248,10 +229,10 @@
         <section>
           <h3>Sim date</h3>
           <p>
-            Top-left HUD shows the simulated date, anchored to the J2000 epoch
-            (1 Jan 2000) so it always matches the planets' positions. It
-            advances 8 hours per real second at ×1 speed, respects pause and
-            reverse, and shows UTC.
+            Top-left HUD shows the simulated date. It starts at the real
+            current date — the same positions the planets are placed at — and
+            advances 8 hours per real second at ×1 speed, respecting pause and
+            reverse. Times are UTC.
           </p>
         </section>
 

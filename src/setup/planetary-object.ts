@@ -55,6 +55,15 @@ const normaliseDistance = (distance: number): number => {
   return Math.pow(distance, 0.4);
 };
 
+/** Exported for the view-mode moon guard in solar-system.ts. */
+export { normaliseRadius, normaliseDistance };
+
+/** View-mode stylisation override — see createSolarSystem's moon guard. */
+export interface StylisedValues {
+  radius: number;
+  distance: number;
+}
+
 const degreesToRadians = (degrees: number): number => {
   return (Math.PI * degrees) / 180;
 };
@@ -102,11 +111,14 @@ export class PlanetaryObject {
    */
   activeDistance: number;
 
-  constructor(body: Body) {
+  constructor(body: Body, stylised?: StylisedValues) {
     const { radius, distance, period, daylength, orbits, type, tilt } = body;
 
-    this.radius = normaliseRadius(radius);
-    this.distance = normaliseDistance(distance);
+    // A moon may carry pre-computed view-mode values (the moon guard in
+    // solar-system.ts) — raw km numbers stay untouched for the info panel
+    // and true-scale mode either way.
+    this.radius = stylised ? stylised.radius : normaliseRadius(radius);
+    this.distance = stylised ? stylised.distance : normaliseDistance(distance);
     this.period = period;
     this.daylength = daylength;
     this.orbits = orbits;
@@ -233,6 +245,9 @@ export class PlanetaryObject {
         material.specularMap = this.specularMap;
       }
     }
+    // Smooth-gradient planets (Neptune, Uranus, the ice giants' bands)
+    // show hard 8-bit colour stair-stepping without dithering.
+    material.dithering = true;
 
     const sphere = new THREE.Mesh(geometry, material);
     // No rotation.x here — the static axial tilt lives on the outer rig so
@@ -255,6 +270,7 @@ export class PlanetaryObject {
       map: this.atmosphere?.map,
       transparent: true,
     });
+    material.dithering = true;
 
     if (this.atmosphere.alpha) {
       material.alphaMap = this.atmosphere.alpha;
@@ -270,7 +286,7 @@ export class PlanetaryObject {
   };
 
   private getOrbitRotation = (elapsedTime: number) => {
-    return this.daylength ? (elapsedTime * timeFactor) / (this.period * 24) : 0;
+    return this.period ? (elapsedTime * timeFactor) / (this.period * 24) : 0;
   };
 
   /**

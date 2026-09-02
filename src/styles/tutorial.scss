@@ -195,5 +195,12 @@
   white-space: nowrap;
   pointer-events: none;
   transform: translate(-50%, -100%);
-  z-index: 13;
+  z-index: 40;
+
+  /* Variant for tool-rail buttons: opened to the RIGHT of the control,
+     vertically centred (an above/below tooltip would clip or cover the
+     rest of the rail). */
+  &.tooltip-right {
+    transform: translate(0, -50%);
+  }
 }

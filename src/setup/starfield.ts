@@ -76,6 +76,10 @@ export class Starfield {
   private material: THREE.ShaderMaterial;
   private currentKey = "";
 
+  // Per-frame scratch (shared — update() runs once per frame).
+  private static readonly tmpPosition = new THREE.Vector3();
+  private static readonly tmpScale = new THREE.Vector3();
+
   constructor(scene: THREE.Scene) {
     this.group = new THREE.Group();
     this.group.frustumCulled = false;
@@ -135,6 +139,9 @@ export class Starfield {
 
     this.stars = new THREE.Points(geometry, this.material);
     this.stars.frustumCulled = false;
+    // The 10k-point shell is scenery — raycasting it on every click/hover/
+    // zoom-probe is pure waste (Points tests every vertex).
+    this.stars.raycast = () => {};
     this.group.add(this.stars);
 
     // --- Milky Way band --------------------------------------------------
@@ -153,14 +160,16 @@ export class Starfield {
     const SIGMA = 0.08;
     // peak texture value: ~0.32 so that ×1.7 colour lands at ~0.55
     // luminance in the band core (visible glow, never saturating)
-    const PEAK = 0.32;
+    const PEAK = 0.3;
     const mottle = (x: number, y: number): number => {
       // two octaves of cheap value noise for subtle dust mottling
       const n1 = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
       const n2 = Math.sin(x * 31.144 + y * 47.912) * 12543.123;
       const f1 = n1 - Math.floor(n1);
       const f2 = n2 - Math.floor(n2);
-      return 0.82 + 0.18 * (0.6 * f1 + 0.4 * f2);
+      // Low-contrast mottling — stronger amplitude reads as dirty grey
+      // smudges against the black sky instead of dust structure.
+      return 0.93 + 0.07 * (0.6 * f1 + 0.4 * f2);
     };
     for (let y = 0; y < 256; y++) {
       const lat = y / 256 - 0.5;
@@ -170,8 +179,8 @@ export class Starfield {
         const v = Math.min(1, glow * m * PEAK);
         const i = (y * 512 + x) * 4;
         bandImg.data[i] = Math.round(255 * v);
-        bandImg.data[i + 1] = Math.round(245 * v);
-        bandImg.data[i + 2] = Math.round(232 * v);
+        bandImg.data[i + 1] = Math.round(244 * v);
+        bandImg.data[i + 2] = Math.round(226 * v);
         bandImg.data[i + 3] = Math.round(255 * v); // opaque; alpha via luminance
       }
     }
@@ -202,6 +211,9 @@ export class Starfield {
       band
     );
     cap.frustumCulled = false;
+    // Same as the stars: scenery, never a raycast target (the cap is a
+    // ~6k-triangle mesh that would be triangle-tested on every click).
+    cap.raycast = () => {};
     // Fixed world orientation — the band stays put in the sky as the
     // camera rotates; only its position follows the camera.
     cap.rotation.set(0.55, 0.85, 0.45);
@@ -230,16 +242,17 @@ export class Starfield {
     timeMs: number,
     pixelRatio: number
   ): void {
-    const worldPos = new THREE.Vector3();
+    // Reused buffers — update() runs every frame.
+    const worldPos = Starfield.tmpPosition;
+    const camScale = Starfield.tmpScale;
+
     camera.getWorldPosition(worldPos);
     this.group.position.copy(worldPos);
 
     // Uniform scale of the render camera's world matrix (parent mesh scale;
     // 1 in free-roam, where the camera is detached to the scene root).
     renderCamera.updateWorldMatrix(true, false);
-    const camScale = new THREE.Vector3().setFromMatrixScale(
-      renderCamera.matrixWorld
-    );
+    camScale.setFromMatrixScale(renderCamera.matrixWorld);
     const cameraScale = (camScale.x + camScale.y + camScale.z) / 3 || 1;
 
     const viewRadius = camera.far * 0.85;

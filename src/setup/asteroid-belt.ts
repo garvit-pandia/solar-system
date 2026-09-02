@@ -47,6 +47,7 @@ export class InstancedBelt {
   private ys: number[] = [];
   private phases: number[] = [];
   private sizes: number[] = [];
+  private zScales: number[] = [];
   private dummy: THREE.Object3D = new THREE.Object3D();
   private instanced: THREE.InstancedMesh[] = [];
 
@@ -74,6 +75,9 @@ export class InstancedBelt {
       this.ys.push(randomBetween(-config.bandHalf, config.bandHalf));
       this.phases.push(Math.random() * Math.PI * 2);
       this.sizes.push(this.powerSize());
+      // Fixed per-rock flattening — randomising it per FRAME would make every
+      // rock visibly pulse/flicker as its shape changes each tick.
+      this.zScales.push(randomBetween(0.7, 1.3));
     }
 
     for (const geometry of geometries) {
@@ -87,8 +91,15 @@ export class InstancedBelt {
         material,
         instanceCount
       );
-      instanced.castShadow = true;
-      instanced.receiveShadow = true;
+      // Sub-pixel rocks gain nothing from the 6-face point-light shadow
+      // map — skip it entirely (a large per-frame fill-rate saving while a
+      // belt is visible).
+      instanced.castShadow = false;
+      instanced.receiveShadow = false;
+      // Belts are scenery, never click targets — keep them out of every
+      // raycast (pick, hover, zoom-probe). InstancedMesh raycast walks ALL
+      // instances per test, which is wasted work for thousands of rocks.
+      instanced.raycast = () => {};
 
       // Per-instance colour variation from the rock palette.
       for (let i = 0; i < instanceCount; i++) {
@@ -159,6 +170,7 @@ export class InstancedBelt {
     const ring = new THREE.Mesh(geometry, material);
     ring.rotation.x = -Math.PI / 2;
     ring.renderOrder = 1;
+    ring.raycast = () => {};
     return ring;
   };
 
@@ -177,13 +189,17 @@ export class InstancedBelt {
         rotationSpeed * elapsedTime + this.phases[i],
         Math.cos(this.phases[i]) * 0.8
       );
-      this.dummy.scale.set(size, size, size * randomBetween(0.7, 1.3));
+      this.dummy.scale.set(size, size, size * this.zScales[i]);
       this.dummy.updateMatrix();
 
       for (const instanced of this.instanced) {
         instanced.setMatrixAt(i, this.dummy.matrix);
-        instanced.instanceMatrix.needsUpdate = true;
       }
+    }
+    // One flag per mesh after the batch — setting it inside the loop is
+    // redundant (it's a boolean, not a counter).
+    for (const instanced of this.instanced) {
+      instanced.instanceMatrix.needsUpdate = true;
     }
   };
 

@@ -27,8 +27,6 @@ export const options = {
   trueScale: false,
   showBelt: false,
   showKuiper: false,
-  zangle: 0,
-  yangle: 0,
 };
 
 /** Remembered day-mode level, so the toolbar toggle returns to the user's
@@ -107,7 +105,14 @@ export const createGUI = (
         const object = solarSystem[name];
         if (object.type === "moon") {
           object.mesh.visible = value;
+          // CSS2D labels ignore ancestor visibility — hide the moon's POI
+          // chips too, or they float over empty space.
+          object.labels.hidePOI();
         }
+      }
+      // Reveal the focused moon's chips again when moons come back.
+      if (value && solarSystem[options.focus]?.type === "moon") {
+        solarSystem[options.focus].labels.showPOI();
       }
     });
 
@@ -126,6 +131,7 @@ export const createGUI = (
     .onChange((preset: string) => {
       const magnitude = SPEED_PRESETS[preset] ?? 0.125;
       options.speed = options.reverse ? -magnitude : magnitude;
+      speedController?.updateDisplay();
     });
 
   // Reverse time
@@ -137,7 +143,7 @@ export const createGUI = (
     });
 
   // Fine-grained simulation speed
-  gui.add(options, "speed", 0.05, 200, 0.05).name("Speed");
+  const speedController = gui.add(options, "speed", 0.05, 200, 0.05).name("Speed");
 
   // True scale mode
   gui
@@ -210,6 +216,46 @@ export const createGUI = (
   // Toggle GUI panel
   document.getElementById("btn-settings")?.addEventListener("click", () => {
     gui.show(gui._hidden);
+  });
+
+  // Tool rail expand/collapse — collapsed shows icons only (tooltips carry
+  // the names), expanded shows icon + name rows. State persists.
+  const toolbar = document.querySelector(".toolbar");
+  const railToggle = document.getElementById("btn-rail-toggle");
+  const RAIL_KEY = "solar-rail-expanded";
+
+  const applyRailExpanded = (expanded: boolean): void => {
+    toolbar?.classList.toggle("expanded", expanded);
+    if (railToggle) {
+      railToggle.setAttribute("aria-expanded", String(expanded));
+      railToggle.setAttribute("aria-label", expanded ? "Hide tool names" : "Show tool names");
+      const label = railToggle.querySelector(".tool-label");
+      if (label) label.textContent = expanded ? "Hide Names" : "Show Names";
+    }
+    try {
+      localStorage.setItem(RAIL_KEY, String(expanded));
+    } catch {
+      /* private mode — session-only */
+    }
+  };
+
+  try {
+    applyRailExpanded(localStorage.getItem(RAIL_KEY) === "true");
+  } catch {
+    /* default collapsed */
+  }
+
+  railToggle?.addEventListener("click", () => {
+    applyRailExpanded(!toolbar?.classList.contains("expanded"));
+  });
+
+  // Clicking the empty rail surface (or a separator) also expands it —
+  // collapsed icons alone don't say what they do.
+  toolbar?.addEventListener("click", (e) => {
+    if (toolbar.classList.contains("expanded")) return;
+    const target = e.target as HTMLElement;
+    if (target.closest(".tool-btn")) return;
+    applyRailExpanded(true);
   });
 
   applyPathVisibility(solarSystem);

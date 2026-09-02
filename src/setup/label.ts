@@ -14,6 +14,9 @@ export class Label {
   radius: number;
   elements: CSS2DObject[];
 
+  private static readonly tmpA = new THREE.Vector3();
+  private static readonly tmpB = new THREE.Vector3();
+
   /**
    * Represents a collection of labels for a celestial body.
    * @constructor
@@ -261,9 +264,11 @@ export class Label {
     const hideThreshold = 1;
     const fadeThreshold = 0.75;
 
-    // Calculates the great-circle distance between the camera and label with normalised vectors.
-    const cameraVector = camera.position.clone().normalize();
-    const labelVector = label.position.clone().normalize();
+    // Calculates the great-circle distance between the camera and label with
+    // normalised vectors (reused scratch vectors — runs for every POI label
+    // every frame).
+    const cameraVector = Label.tmpA.copy(camera.position).normalize();
+    const labelVector = Label.tmpB.copy(label.position).normalize();
     const delta = Math.acos(cameraVector.dot(labelVector));
 
     if (delta > hideThreshold) {

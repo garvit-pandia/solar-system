@@ -12,6 +12,8 @@ const clamp = (v: number, min: number, max: number): number =>
 export interface FreeCameraOptions {
   camera: THREE.PerspectiveCamera;
   canvas: HTMLElement;
+  /** Scene used to raycast the zoom baseline (the nearest body ahead). */
+  scene: THREE.Scene;
   /** Zoom range in world units (mode-aware — called per wheel event). */
   getZoomLimits: () => { min: number; max: number };
 }
@@ -34,13 +36,22 @@ export class FreeCamera {
 
   private readonly camera: THREE.PerspectiveCamera;
   private readonly canvas: HTMLElement;
+  private readonly scene: THREE.Scene;
   private readonly getZoomLimits: () => { min: number; max: number };
 
   private yaw = 0;
   private pitch = 0;
+  /**
+   * Zoom state = the camera's CURRENT distance to what's ahead (world
+   * units, re-probed on every wheel event). A smaller value means closer.
+   */
   private zoom = 30;
   private zoomTarget = 30;
   private readonly euler = new THREE.Euler(0, 0, 0, "YXZ");
+
+  /** Raycast probe for the wheel-zoom baseline (zero per-frame allocs). */
+  private readonly raycaster = new THREE.Raycaster();
+  private readonly ndcCenter = new THREE.Vector2(0, 0);
 
   private dragging = false;
   private pointerId = -1;
@@ -50,6 +61,7 @@ export class FreeCamera {
   constructor(options: FreeCameraOptions) {
     this.camera = options.camera;
     this.canvas = options.canvas;
+    this.scene = options.scene;
     this.getZoomLimits = options.getZoomLimits;
   }
 
@@ -66,7 +78,7 @@ export class FreeCamera {
     // from the current distance keeps every wheel step a proportional ~25%
     // of that distance: zooming never dead-ends at a limit and never
     // tunnels through a nearby body.
-    this.zoom = this.zoomTarget = Math.max(this.camera.position.length(), 1e-6);
+    this.zoom = this.zoomTarget = this.probeDistance();
   };
 
   exit = (): void => {
@@ -107,16 +119,52 @@ export class FreeCamera {
   private onWheel = (e: WheelEvent): void => {
     if (!this.active) return;
     e.preventDefault();
-    const factor = e.deltaY > 0 ? 1 / ZOOM_STEP : ZOOM_STEP;
+    const factor = e.deltaY > 0 ? ZOOM_STEP : 1 / ZOOM_STEP;
+    // Zoom state IS the distance to what's ahead — re-probe on EVERY event
+    // so each step is exactly 25% of the CURRENT distance. A baseline
+    // captured once at entry goes stale the moment the camera dollies or the
+    // view turns: steps then grow with the stale scalar (zoom-in accelerates
+    // into a dive, zoom-out rockets away) — the "glitching" wheel.
+    const baseline = this.probeDistance();
+    this.zoom = baseline;
+    const next = baseline * factor;
     const limits = this.getZoomLimits();
-    const next = this.zoomTarget * factor;
-    // Enforce the limits only while the zoom state already sits inside them.
-    // If the camera entered the mode beyond a limit (e.g. flown past
-    // maxDistance), the first wheel events move freely until it re-enters
-    // the range — clamping there would dead-end zooming in (target pinned at
-    // max, zero dolly) or fire a giant one-shot dolly back into the range.
-    const inside = this.zoomTarget >= limits.min && this.zoomTarget <= limits.max;
-    this.zoomTarget = inside ? clamp(next, limits.min, limits.max) : next;
+    const inside = baseline >= limits.min && baseline <= limits.max;
+    // Direction-aware limits: only the bound the step moves TOWARD may
+    // clamp. Clamping the whole target range would dead-end zoom-IN at the
+    // max limit (next > max → clamped back to max → zero dolly) and zoom-out
+    // at the min. Outside the range (camera entered beyond a limit) nothing
+    // clamps until it re-enters — free dolly back into range.
+    let target = next;
+    if (inside) {
+      target =
+        next < baseline
+          ? Math.max(next, limits.min)
+          : Math.min(next, limits.max);
+    }
+    this.zoomTarget = target;
+  };
+
+  /**
+   * Distance from the camera to the nearest celestial body along the view
+   * axis (world units). In open space (nothing ahead), the camera's distance
+   * from the scene origin stands in so dolly stays proportional.
+   *
+   * Only bodies count (userData.body chain) — belts, the starfield shell and
+   * orbit paths never become zoom anchors.
+   */
+  private probeDistance = (): number => {
+    this.camera.updateMatrixWorld(true);
+    this.raycaster.setFromCamera(this.ndcCenter, this.camera);
+    const hits = this.raycaster.intersectObjects(this.scene.children, true);
+    for (const hit of hits) {
+      let object: THREE.Object3D | null = hit.object;
+      while (object) {
+        if (object.userData.body) return Math.max(hit.distance, 1e-6);
+        object = object.parent;
+      }
+    }
+    return Math.max(this.camera.position.length(), 1e-6);
   };
 
   /** Attach input listeners. Called once at startup; listeners self-gate. */
@@ -141,8 +189,10 @@ export class FreeCamera {
     this.zoom += (this.zoomTarget - this.zoom) * Math.min(1, dt * ZOOM_SMOOTH);
     const delta = this.zoom - prevZoom;
     if (Math.abs(delta) > 1e-6) {
-      // Dolly along the view axis: +zoom moves forward (wheel up = zoom in).
-      this.camera.translateZ(-delta);
+      // Zoom = distance to what's ahead: a shrinking zoom moves FORWARD
+      // (toward it), a growing one moves back. translateZ is local, so the
+      // dolly always follows the current view axis.
+      this.camera.translateZ(delta);
     }
   };
 }

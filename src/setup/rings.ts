@@ -15,6 +15,7 @@ export const createRingMesh = (texture: THREE.Texture): THREE.Mesh => {
     side: THREE.DoubleSide,
     transparent: true,
   });
+  ringMaterial.dithering = true;
 
   const rings = new THREE.Mesh(ringGeometry, ringMaterial);
   rings.receiveShadow = true;

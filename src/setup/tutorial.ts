@@ -184,13 +184,27 @@ export class Tutorial {
     document.querySelectorAll<HTMLElement>("[data-tooltip]").forEach((el) => {
       el.addEventListener("mouseenter", () => {
         tooltip.textContent = el.dataset.tooltip ?? "";
+        // Redundant while the tool rail is expanded (names are visible).
+        if (el.closest(".toolbar")?.classList.contains("expanded")) return;
         tooltip.style.display = "block";
         const rect = el.getBoundingClientRect();
-        tooltip.style.left = `${rect.left + rect.width / 2}px`;
-        tooltip.style.top = `${rect.top - 8}px`;
+        if (el.closest(".toolbar")) {
+          // Tool-rail buttons: open to the right, vertically centred.
+          tooltip.classList.add("tooltip-right");
+          tooltip.style.left = `${rect.right + 10}px`;
+          tooltip.style.top = `${rect.top + rect.height / 2}px`;
+        } else {
+          tooltip.classList.remove("tooltip-right");
+          // Prefer ABOVE the control; flip below when there is no room
+          // (top-edge controls would push the tooltip off-screen).
+          const roomAbove = rect.top > 60;
+          tooltip.style.left = `${rect.left + rect.width / 2}px`;
+          tooltip.style.top = roomAbove ? `${rect.top - 8}px` : `${rect.bottom + 8}px`;
+        }
       });
       el.addEventListener("mouseleave", () => {
         tooltip.style.display = "none";
+        tooltip.classList.remove("tooltip-right");
       });
     });
   }
