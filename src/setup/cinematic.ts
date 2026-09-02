@@ -13,13 +13,13 @@ interface CinematicOptions {
 let toastTimer = 0;
 
 /** Small bottom-centre feedback pill ("Screenshot saved", …). */
-export const showToast = (message: string): void => {
+export const showToast = (message: string, durationMs = 2400): void => {
   const el = document.getElementById("app-toast");
   if (!el) return;
   el.textContent = message;
   el.classList.add("show");
   window.clearTimeout(toastTimer);
-  toastTimer = window.setTimeout(() => el.classList.remove("show"), 2400);
+  toastTimer = window.setTimeout(() => el.classList.remove("show"), durationMs);
 };
 
 /**

@@ -10,9 +10,13 @@ import { createLights } from "./setup/lights";
 import {
   createSolarSystem,
   applyTrueScale,
+  captureScaleState,
+  applyScaleState,
+  lerpScaleState,
   getWorldScale,
   TRUE_SCALE_VIEW_RANGE,
 } from "./setup/solar-system";
+import type { ScaleSnapshot } from "./setup/solar-system";
 import { initialElapsedTime, simDateMsFromElapsed } from "./setup/ephemeris";
 import {
   createGUI,
@@ -32,7 +36,7 @@ import { CinematicTour } from "./setup/tour";
 import { FreeRoam } from "./setup/fly";
 import { FreeCamera } from "./setup/free-camera";
 import { PathFader } from "./setup/path-visibility";
-import { Cinematic } from "./setup/cinematic";
+import { Cinematic, showToast } from "./setup/cinematic";
 import { MotionTrails } from "./setup/trail";
 import { createTelemetry, computeKmPerUnit } from "./setup/telemetry";
 import { TimeTravel } from "./setup/time-travel";
@@ -203,10 +207,34 @@ const setDetached = (value: boolean): void => {
   }
 };
 
+// True-scale morph: the toggle ANIMATES scales, orbit distances and paths
+// over ~1.6s (the Sun visibly swells, orbits stream outward) instead of
+// snapping — the transition itself teaches the emptiness of space.
+const scaleMorph = {
+  active: false,
+  t: 0,
+  duration: 1.6,
+  from: null as ScaleSnapshot | null,
+  to: null as ScaleSnapshot | null,
+  enabled: false,
+};
+
+const easeInOutCubic = (t: number): number =>
+  t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
 const applyScaleMode = (enabled: boolean) => {
+  // Morph the geometry FIRST: capture the start, let applyTrueScale compute
+  // the targets, then reset the visuals to the start — tick() tweens them.
+  // (Everything below — belts, bloom, far plane, ring visibility — flips
+  // with the toggle immediately; only the geometry eases.)
+  const from = captureScaleState(solarSystem);
   applyTrueScale(solarSystem, enabled);
+  const to = captureScaleState(solarSystem);
+  applyScaleState(solarSystem, from);
   asteroidBelt.setTrueScale(enabled);
   kuiperBelt.setTrueScale(enabled);
+  // Fader config + parent-scale cache for the END state (worldScales now
+  // describe the target; refreshed again when the tween finishes).
   pathFader.applyTrueScale(enabled);
   // The giant true-scale Sun blows out the bloom halo into a muddy blob —
   // tone the bloom down while true scale is active.
@@ -234,6 +262,11 @@ const applyScaleMode = (enabled: boolean) => {
   }
   applyPathVisibility(solarSystem);
   syncToolbar();
+  scaleMorph.active = true;
+  scaleMorph.t = 0;
+  scaleMorph.from = from;
+  scaleMorph.to = to;
+  scaleMorph.enabled = enabled;
   updateCameraLimits(options.focus);
   // Snap the camera onto the focused body's orbit so the scale change is
   // immediately visible — but only in focused mode. While free-roaming or
@@ -244,6 +277,12 @@ const applyScaleMode = (enabled: boolean) => {
     const minDistance = object.getMinDistance();
     setDaysideCameraPosition(object, minDistance);
   }
+  showToast(
+    enabled
+      ? "True scale — the Sun is 109 × Earth · space is mostly emptiness"
+      : "View scale restored",
+    3200
+  );
 };
 
 // Land the focus camera on the DAYSIDE: the old fixed local offset ignored
@@ -709,6 +748,23 @@ if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
   if (ambientLight.intensity !== options.ambient) {
     ambientLight.intensity +=
       (options.ambient - ambientLight.intensity) * Math.min(1, dt * 6);
+  }
+
+  // True-scale morph tween (see applyScaleMode).
+  if (scaleMorph.active && scaleMorph.from && scaleMorph.to) {
+    scaleMorph.t = Math.min(1, scaleMorph.t + dt / scaleMorph.duration);
+    lerpScaleState(
+      solarSystem,
+      scaleMorph.from,
+      scaleMorph.to,
+      easeInOutCubic(scaleMorph.t)
+    );
+    if (scaleMorph.t >= 1) {
+      scaleMorph.active = false;
+      applyScaleState(solarSystem, scaleMorph.to);
+      pathFader.applyTrueScale(scaleMorph.enabled);
+      updateCameraLimits(options.focus);
+    }
   }
 
   // Keep the star shell centered on the camera (stars "at infinity").

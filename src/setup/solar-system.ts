@@ -178,6 +178,85 @@ export const applyTrueScale = (
 
     worldScales[name] = parentWorld * object.mesh.scale.x;
   }
+}
+
+/** One body's scale-dependent values (see captureScaleState). */
+export interface ScaleSnapshotEntry {
+  /** mesh.scale (uniform). */
+  scale: number;
+  activeDistance: number;
+  /** path.scale (0 when the body has no orbit path). */
+  pathScale: number;
+  /** AU → local-units factor (Keplerian bodies). */
+  unitScale: number;
+}
+
+export type ScaleSnapshot = Record<string, ScaleSnapshotEntry>;
+
+/** Read every body's current scale-dependent values (for the morph tween). */
+export const captureScaleState = (solarSystem: SolarSystem): ScaleSnapshot => {
+  const snap: ScaleSnapshot = {};
+  for (const name in solarSystem) {
+    const object = solarSystem[name];
+    snap[name] = {
+      scale: object.mesh.scale.x,
+      activeDistance: object.activeDistance,
+      pathScale: object.path ? object.path.scale.x : 0,
+      unitScale: object.orbitUnitScale,
+    };
+  }
+  return snap;
+};
+
+const recomputeWorldScales = (solarSystem: SolarSystem): void => {
+  // planets.json order (parents before children) is preserved in the record,
+  // so each body's parent world scale is already known.
+  for (const name in solarSystem) {
+    const object = solarSystem[name];
+    const parentWorld = object.orbits ? worldScales[object.orbits] ?? 1 : 1;
+    worldScales[name] = parentWorld * object.mesh.scale.x;
+  }
+};
+
+/** Write an exact snapshot back (morph start reset / finish). */
+export const applyScaleState = (
+  solarSystem: SolarSystem,
+  snap: ScaleSnapshot
+): void => {
+  for (const name in solarSystem) {
+    const object = solarSystem[name];
+    const entry = snap[name];
+    if (!entry) continue;
+    object.mesh.scale.setScalar(entry.scale);
+    object.activeDistance = entry.activeDistance;
+    if (object.path && entry.pathScale) {
+      object.path.scale.setScalar(entry.pathScale);
+    }
+    object.orbitUnitScale = entry.unitScale;
+  }
+  recomputeWorldScales(solarSystem);
+};
+
+/** Morph step: blend two snapshots by k ∈ [0, 1] and refresh world scales. */
+export const lerpScaleState = (
+  solarSystem: SolarSystem,
+  from: ScaleSnapshot,
+  to: ScaleSnapshot,
+  k: number
+): void => {
+  for (const name in solarSystem) {
+    const object = solarSystem[name];
+    const a = from[name];
+    const b = to[name];
+    if (!a || !b) continue;
+    object.mesh.scale.setScalar(a.scale + (b.scale - a.scale) * k);
+    object.activeDistance = a.activeDistance + (b.activeDistance - a.activeDistance) * k;
+    if (object.path && a.pathScale && b.pathScale) {
+      object.path.scale.setScalar(a.pathScale + (b.pathScale - a.pathScale) * k);
+    }
+    object.orbitUnitScale = a.unitScale + (b.unitScale - a.unitScale) * k;
+  }
+  recomputeWorldScales(solarSystem);
 };
 
 /**

@@ -40,6 +40,7 @@ interface TexturePaths {
   atmosphere?: string;
   atmosphereAlpha?: string;
   specular?: string;
+  night?: string;
 }
 
 interface Atmosphere {
@@ -51,6 +52,8 @@ const timeFactor = 8 * Math.PI * 2; // 1s real-time => 8h simulation time
 
 // Scratch for the per-frame Keplerian position (no tick-path allocations).
 const helioScratch = new THREE.Vector3();
+// Scratch for the night-lights sun-direction update.
+const nightSunScratch = new THREE.Vector3();
 
 // True-scale world unit: 1 unit = 1 Earth radius (6371 km).
 export const EARTH_RADIUS_KM = 6371;
@@ -77,6 +80,51 @@ export interface StylisedValues {
 const degreesToRadians = (degrees: number): number => {
   return (Math.PI * degrees) / 180;
 };
+
+/**
+ * Fresnel rim-scatter shells — the "this looks real" cue hard planet edges
+ * lack. One additive back-side shell per atmosphere-bearing body, tinted per
+ * world: Rayleigh-blue Earth, creamy Venus, dusty Mars, faint haze on the
+ * gas giants, orange smog on Titan. Power tunes the falloff tightness.
+ */
+interface RimConfig {
+  color: [number, number, number];
+  power: number;
+  intensity: number;
+  /** Shell radius relative to the planet's surface. */
+  size: number;
+}
+
+const ATMOSPHERE_RIMS: Record<string, RimConfig> = {
+  Venus: { color: [0.95, 0.82, 0.55], power: 3.2, intensity: 0.85, size: 1.06 },
+  Earth: { color: [0.35, 0.58, 1.0], power: 3.6, intensity: 1.0, size: 1.055 },
+  Mars: { color: [0.85, 0.58, 0.38], power: 4.2, intensity: 0.4, size: 1.05 },
+  Jupiter: { color: [0.85, 0.76, 0.62], power: 3.8, intensity: 0.4, size: 1.04 },
+  Saturn: { color: [0.92, 0.84, 0.62], power: 3.8, intensity: 0.38, size: 1.04 },
+  Uranus: { color: [0.55, 0.85, 0.92], power: 3.6, intensity: 0.45, size: 1.05 },
+  Neptune: { color: [0.42, 0.62, 1.0], power: 3.6, intensity: 0.5, size: 1.05 },
+  Titan: { color: [0.9, 0.68, 0.4], power: 3.4, intensity: 0.55, size: 1.12 },
+};
+
+const RIM_VERTEX = /* glsl */ `
+  varying vec3 vNormal;
+  void main() {
+    vNormal = normalize(normalMatrix * normal);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const RIM_FRAGMENT = /* glsl */ `
+  uniform vec3 uColor;
+  uniform float uPower;
+  uniform float uIntensity;
+  varying vec3 vNormal;
+  void main() {
+    // Back-side shell: the limb gathers depth, the disc's centre falls off.
+    float rim = pow(max(0.0, 0.62 - dot(vNormal, vec3(0.0, 0.0, 1.0))), uPower);
+    gl_FragColor = vec4(uColor * rim * uIntensity, rim * uIntensity);
+  }
+`;
 
 export class PlanetaryObject {
   readonly name: string;
@@ -106,6 +154,9 @@ export class PlanetaryObject {
   map!: THREE.Texture;
   bumpMap?: THREE.Texture;
   specularMap?: THREE.Texture;
+  nightMap?: THREE.Texture;
+  /** Uniform bucket for the night-lights shader (Earth only). */
+  nightUniforms?: { uSunDir: { value: THREE.Vector3 } };
   atmosphere: Atmosphere = {};
   labels!: Label;
 
@@ -198,9 +249,16 @@ export class PlanetaryObject {
     }
 
     if (this.atmosphere.map) {
-      // Atmosphere rides the spinning visual so clouds rotate with the
+      // Cloud layer rides the spinning visual so clouds rotate with the
       // surface; its tilt is inherited from the outer rig (no own rotation).
       this.spinMesh.add(this.createAtmosphereMesh());
+    }
+
+    // Fresnel rim-scatter shell (see ATMOSPHERE_RIMS) — sits just outside
+    // the surface, additive, unaffected by the day/night spin.
+    const rim = ATMOSPHERE_RIMS[body.name];
+    if (rim) {
+      this.spinMesh.add(this.createRimShell(rim));
     }
 
     this.initLabels(body.labels);
@@ -265,6 +323,9 @@ export class PlanetaryObject {
     if (textures.atmosphereAlpha) {
       this.atmosphere.alpha = loadTexture(textures.atmosphereAlpha);
     }
+    if (textures.night) {
+      this.nightMap = loadTexture(textures.night);
+    }
   }
 
   /**
@@ -301,6 +362,43 @@ export class PlanetaryObject {
         material.specularMap = this.specularMap;
       }
     }
+
+    // Earth night lights: additive city-lights mask blended in where the
+    // sun direction dips below the horizon. Injected via onBeforeCompile so
+    // the standard Phong pipeline (bump, specular, shadows) is untouched.
+    if (this.nightMap) {
+      this.nightUniforms = { uSunDir: { value: new THREE.Vector3(1, 0, 0) } };
+      const uniforms = this.nightUniforms;
+      material.onBeforeCompile = (shader) => {
+        shader.uniforms.nightMap = { value: this.nightMap };
+        shader.uniforms.uSunDir = uniforms.uSunDir;
+        shader.uniforms.uNightIntensity = { value: 1.6 };
+        shader.vertexShader = shader.vertexShader
+          .replace(
+            "#include <common>",
+            "#include <common>\nvarying vec3 vWorldNormal;"
+          )
+          .replace(
+            "#include <begin_vertex>",
+            "#include <begin_vertex>\nvWorldNormal = normalize(mat3(modelMatrix) * objectNormal);"
+          );
+        shader.fragmentShader = shader.fragmentShader
+          .replace(
+            "#include <common>",
+            "#include <common>\nuniform sampler2D nightMap;\nuniform vec3 uSunDir;\nuniform float uNightIntensity;\nvarying vec3 vWorldNormal;"
+          )
+          .replace(
+            "#include <dithering_fragment>",
+            [
+              "float dayDot = dot(normalize(vWorldNormal), normalize(uSunDir));",
+              "float nightMask = smoothstep(0.08, -0.18, dayDot);",
+              "vec3 cityGlow = texture2D(nightMap, vMapUv).rgb;",
+              "gl_FragColor.rgb += cityGlow * cityGlow * nightMask * uNightIntensity;",
+              "#include <dithering_fragment>",
+            ].join("\n")
+          );
+      };
+    }
     // Smooth-gradient planets (Neptune, Uranus, the ice giants' bands)
     // show hard 8-bit colour stair-stepping without dithering.
     material.dithering = true;
@@ -335,6 +433,30 @@ export class PlanetaryObject {
     const sphere = new THREE.Mesh(geometry, material);
     sphere.receiveShadow = true;
     return sphere;
+  };
+
+  /**
+   * Fresnel rim-scatter shell — an additive back-side sphere just outside
+   * the surface that reads as an atmosphere limb (see ATMOSPHERE_RIMS).
+   */
+  private createRimShell = (rim: RimConfig) => {
+    const geometry = new THREE.SphereGeometry(this.radius * rim.size, 48, 48);
+    const material = new THREE.ShaderMaterial({
+      uniforms: {
+        uColor: { value: new THREE.Color(...rim.color) },
+        uPower: { value: rim.power },
+        uIntensity: { value: rim.intensity },
+      },
+      vertexShader: RIM_VERTEX,
+      fragmentShader: RIM_FRAGMENT,
+      side: THREE.BackSide,
+      blending: THREE.AdditiveBlending,
+      transparent: true,
+      depthWrite: false,
+    });
+    const shell = new THREE.Mesh(geometry, material);
+    shell.raycast = () => {};
+    return shell;
   };
 
   private getRotation = (elapsedTime: number) => {
@@ -378,6 +500,13 @@ export class PlanetaryObject {
       this.spinMesh.rotation.z = rotation;
     } else {
       this.spinMesh.rotation.y = rotation;
+    }
+
+    // City-lights shader: track the sun direction in world space (the
+    // planet moves along its orbit, so the terminator rotates too).
+    if (this.nightUniforms) {
+      this.mesh.getWorldPosition(nightSunScratch);
+      this.nightUniforms.uSunDir.value.copy(nightSunScratch).multiplyScalar(-1);
     }
   };
 
