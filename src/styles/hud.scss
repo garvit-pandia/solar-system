@@ -22,8 +22,86 @@
   border-radius: $radius-pill;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   padding: 0.4rem 0.9rem;
-  pointer-events: none;
+  /* Clickable — opens the date-travel popover. */
+  pointer-events: auto;
+  cursor: pointer;
   user-select: none;
+}
+
+/* Date-travel popover — opens under the sim-date chip. */
+#date-popover {
+  position: fixed;
+  top: 5.7rem;
+  left: 4.5rem;
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  width: max-content;
+  max-width: calc(100vw - 5.5rem);
+  padding: 0.85rem 0.95rem;
+  background: $panel-bg-strong;
+  backdrop-filter: $panel-blur;
+  -webkit-backdrop-filter: $panel-blur;
+  border: $hairline;
+  border-radius: $radius-panel;
+  box-shadow: $panel-shadow;
+
+  &[hidden] {
+    display: none;
+  }
+
+  .date-label {
+    font-size: 0.56rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: $text-45;
+  }
+
+  input {
+    font-family: $font;
+    font-size: 0.72rem;
+    color: $text-92;
+    color-scheme: dark;
+    background: rgba(255, 255, 255, 0.06);
+    border: $hairline;
+    border-radius: $radius-input;
+    padding: 0.4rem 0.55rem;
+
+    &:focus-visible {
+      outline: 2px solid rgba($accent, 0.7);
+      outline-offset: 1px;
+    }
+  }
+
+  .date-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .date-btn {
+    @extend %glass-btn;
+    padding: 0.38rem 0.9rem;
+    font-size: 0.6rem;
+
+    &.primary {
+      background: $accent;
+      border-color: transparent;
+      color: #0f0f1e;
+      font-weight: 800;
+
+      &:hover {
+        background: #ffd97a;
+        border-color: transparent;
+      }
+    }
+  }
+
+  .date-note {
+    font-size: 0.55rem;
+    letter-spacing: 0.04em;
+    color: $text-45;
+  }
 }
 
 /* Live telemetry strip — sits under the sim-date chip, same glass idiom.

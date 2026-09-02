@@ -1,9 +1,16 @@
 import * as THREE from "three";
 import { createRingMesh } from "./rings";
-import { createPath } from "./path";
+import { createPath, createEllipsePath, segmentCount } from "./path";
 import { loadTexture } from "./textures";
 import { Label } from "./label";
 import { PointOfInterest } from "./label";
+import {
+  hasElements as bodyHasElements,
+  semiMajorAxisAU,
+  heliocentricSceneAU,
+  orbitEllipsePointsAU,
+  daysSinceJ2000FromElapsed,
+} from "./ephemeris";
 
 export interface Body {
   name: string;
@@ -42,6 +49,9 @@ interface Atmosphere {
 
 const timeFactor = 8 * Math.PI * 2; // 1s real-time => 8h simulation time
 
+// Scratch for the per-frame Keplerian position (no tick-path allocations).
+const helioScratch = new THREE.Vector3();
+
 // True-scale world unit: 1 unit = 1 Earth radius (6371 km).
 export const EARTH_RADIUS_KM = 6371;
 // Saturn's ring system outer edge, km (used to size the ring in true scale).
@@ -69,6 +79,7 @@ const degreesToRadians = (degrees: number): number => {
 };
 
 export class PlanetaryObject {
+  readonly name: string;
   radius: number; // in km
   distance: number; // in million km
   period: number; // in days
@@ -106,13 +117,27 @@ export class PlanetaryObject {
   distanceKm: number;
   /**
    * Orbit radius currently used by tick(), in parent-local units.
-   * Equal to baseDistance in view mode; in true-scale mode it is
-   * worldDistance / parentWorldScale so the whole hierarchy stays consistent.
+   * Circular orbits (moons): the orbit radius. Keplerian bodies: the
+   * semi-major axis in local units (the path is a unit ellipse scaled by it).
    */
   activeDistance: number;
+  /** True when the body's position comes from J2000 Keplerian elements. */
+  readonly hasElements: boolean;
+  /** Semi-major axis at J2000, in AU (Keplerian bodies only). */
+  readonly semiMajorAU: number;
+  /**
+   * AU → parent-local units factor currently applied to the Keplerian
+   * position: stylised (√-compressed) in view mode, real 1-unit-per-Earth-
+   * radius in true scale. Mutable — applyTrueScale rewrites it per mode.
+   */
+  orbitUnitScale: number;
+  /** View-mode AU → local factor (Keplerian bodies only). */
+  readonly baseOrbitUnitScale: number;
 
   constructor(body: Body, stylised?: StylisedValues) {
     const { radius, distance, period, daylength, orbits, type, tilt } = body;
+
+    this.name = body.name;
 
     // A moon may carry pre-computed view-mode values (the moon guard in
     // solar-system.ts) — raw km numbers stay untouched for the info panel
@@ -133,8 +158,12 @@ export class PlanetaryObject {
     // this object must never spin per-frame.
     this.mesh = new THREE.Object3D();
     // Rings inherit their tilt from the parent planet's mesh (as before);
-    // only sphere bodies carry their own tilt on the rig.
-    if (this.type !== "ring") {
+    // only sphere bodies carry their own tilt on the rig. The Sun does NOT
+    // tilt: its rig defines the ecliptic frame the Keplerian elements are
+    // expressed in — tilting it would rotate every planet's real position
+    // by the Sun's 7.25° obliquity (invisible on a glowing sphere, wrong in
+    // the sky math).
+    if (this.type !== "ring" && this.type !== "star") {
       this.mesh.rotation.x = this.tilt;
     }
     this.mesh.userData.body = body;
@@ -147,11 +176,21 @@ export class PlanetaryObject {
     // (around their host). Rings have no orbit (distance 0 → a degenerate
     // zero-radius circle), so they get no path at all.
     if (this.orbits && this.type !== "ring") {
-      // Sun-orbiting rings get the animated dash "flow" (travel direction);
-      // moon rings stay solid — at their size dashes would shimmer.
-      this.path = createPath(this.distance, {
-        dashed: this.orbits === "Sun",
-      });
+      const dashed = this.orbits === "Sun";
+      if (bodyHasElements(body.name)) {
+        // Real Keplerian ellipse baked from the J2000 elements (unit
+        // semi-major axis — scale is applied after baseDistance, below).
+        const segments = segmentCount(semiMajorAxisAU(body.name));
+        this.path = createEllipsePath(
+          orbitEllipsePointsAU(body.name, 0, segments)!,
+          segments,
+          { dashed }
+        );
+      } else {
+        // Sun-orbiting rings get the animated dash "flow" (travel
+        // direction); moon rings stay solid — dashes would shimmer there.
+        this.path = createPath(this.distance, { dashed });
+      }
       // Orbit paths must never intercept raycasts — otherwise clicks near a
       // parent body's orbit resolve to the wrong body (e.g. the Moon's path
       // circle around Earth captures every click while the camera orbits Earth).
@@ -177,6 +216,19 @@ export class PlanetaryObject {
     this.baseDistance = this.distance;
     this.activeDistance = this.distance;
     this.distanceKm = distance * 1e6;
+
+    // Keplerian bodies: anchor the AU→local factor so the real ellipse
+    // passes through the stylised semi-major axis (view mode keeps the
+    // √-compressed distances; true scale rewrites orbitUnitScale).
+    this.hasElements = bodyHasElements(body.name);
+    this.semiMajorAU = this.hasElements ? semiMajorAxisAU(body.name) : NaN;
+    this.baseOrbitUnitScale = this.hasElements
+      ? this.baseDistance / this.semiMajorAU
+      : 1;
+    this.orbitUnitScale = this.baseOrbitUnitScale;
+    if (this.hasElements && this.path) {
+      this.path.scale.setScalar(this.baseDistance);
+    }
   }
 
   /**
@@ -295,21 +347,33 @@ export class PlanetaryObject {
 
   /**
    * Updates orbital position and rotation.
+   *
+   * Keplerian bodies (8 planets + Pluto) get their position from the J2000
+   * element solver at the sim instant; moons and stylised dwarfs keep the
+   * classic circular orbit. The day/night spin applies to the VISUAL mesh
+   * only — never the outer rig, which hosts the camera (a spinning camera
+   * parent would orbit the view around the body every frame).
    * @param elapsedTime - number of seconds elapsed.
    */
   tick = (elapsedTime: number) => {
-    // Convert real-time seconds to rotation.
     const rotation = this.getRotation(elapsedTime);
-    const orbitRotation = this.getOrbitRotation(elapsedTime);
-    const orbit = orbitRotation + this.rng;
 
-    // Circular rotation around orbit.
-    this.mesh.position.x = Math.sin(orbit) * this.activeDistance;
-    this.mesh.position.z = Math.cos(orbit) * this.activeDistance;
+    if (this.hasElements) {
+      heliocentricSceneAU(
+        this.name,
+        daysSinceJ2000FromElapsed(elapsedTime),
+        helioScratch
+      );
+      this.mesh.position.copy(helioScratch).multiplyScalar(this.orbitUnitScale);
+    } else {
+      // Circular rotation around the orbit (moons, stylised dwarfs).
+      const orbitRotation = this.getOrbitRotation(elapsedTime);
+      const orbit = orbitRotation + this.rng;
+      this.mesh.position.x = Math.sin(orbit) * this.activeDistance;
+      this.mesh.position.z = Math.cos(orbit) * this.activeDistance;
+    }
 
-    // Day/night spin on the VISUAL mesh only — never on the outer rig, which
-    // hosts the camera (a spinning camera parent would orbit the view around
-    // the body every frame).
+    // Day/night spin on the VISUAL mesh only — see the `mesh` doc comment.
     if (this.type === "ring") {
       this.spinMesh.rotation.z = rotation;
     } else {

@@ -1,8 +1,8 @@
 import { options } from "./gui";
+import { AU_KM } from "./ephemeris";
 
 /** One world unit = this many km in TRUE-SCALE mode (1 unit = Earth radius). */
 const TRUE_SCALE_KM_PER_UNIT = 6371;
-const AU_KM = 149597870.7;
 /** ×1 speed = 8 simulated hours per real second (planetary-object timeFactor). */
 const SIM_HOURS_PER_REAL_SECOND_AT_X1 = 8;
 

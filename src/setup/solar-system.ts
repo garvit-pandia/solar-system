@@ -1,6 +1,6 @@
 import { PlanetaryObject, EARTH_RADIUS_KM, RING_OUTER_KM, normaliseRadius, normaliseDistance } from "./planetary-object";
 import type { StylisedValues } from "./planetary-object";
-import { initialOrbitAngle } from "./ephemeris";
+import { AU_KM } from "./ephemeris";
 import planetData from "../planets.json";
 import { Body } from "./planetary-object";
 import { setTextureCount } from "./textures";
@@ -85,13 +85,6 @@ export const createSolarSystem = (
 
     const object = new PlanetaryObject(planet, moonStyling.get(name));
 
-    if (planet.type === "planet") {
-      const angle = initialOrbitAngle(planet.name);
-      if (angle !== undefined) {
-        object.rng = angle;
-      }
-    }
-
     solarSystem[name] = object;
 
     textureCount += Object.keys(planet.textures).length;
@@ -152,19 +145,30 @@ export const applyTrueScale = (
       const worldRadius = worldRadiusKm / EARTH_RADIUS_KM;
       object.mesh.scale.setScalar(worldRadius / (object.baseRadius * parentWorld));
 
-      const worldOrbit = object.distanceKm / EARTH_RADIUS_KM;
-      object.activeDistance = worldOrbit / parentWorld;
+      // Keplerian bodies: switch the AU→local factor from the stylised
+      // compression to real units (1 unit = 1 Earth radius) — the unit-
+      // ellipse path then scales to the real semi-major axis.
+      if (object.hasElements) {
+        object.orbitUnitScale = AU_KM / EARTH_RADIUS_KM / parentWorld;
+        object.activeDistance = object.semiMajorAU * object.orbitUnitScale;
+      } else {
+        const worldOrbit = object.distanceKm / EARTH_RADIUS_KM;
+        object.activeDistance = worldOrbit / parentWorld;
+      }
 
       // The orbit path must sit on the body's orbit: in parent-local space
-      // the body orbits at activeDistance, so the path (unit-circle
-      // geometry scaled by mesh.scale) needs the same local radius. Its
-      // world radius is then parentWorld × activeDistance = worldOrbit.
+      // the body orbits at activeDistance, so the path (unit-circle or
+      // unit-ellipse geometry scaled by mesh.scale) needs the same local
+      // radius. Its world radius is then parentWorld × activeDistance.
       if (object.path) {
         object.path.scale.setScalar(object.activeDistance);
       }
     } else {
       object.mesh.scale.setScalar(1);
       object.activeDistance = object.baseDistance;
+      if (object.hasElements) {
+        object.orbitUnitScale = object.baseOrbitUnitScale;
+      }
       // Restore the view-mode ring radius (NOT 1 — a unit circle would
       // collapse every ring onto the parent body).
       if (object.path) {

@@ -13,7 +13,7 @@ import {
   getWorldScale,
   TRUE_SCALE_VIEW_RANGE,
 } from "./setup/solar-system";
-import { initialElapsedTime } from "./setup/ephemeris";
+import { initialElapsedTime, simDateMsFromElapsed } from "./setup/ephemeris";
 import {
   createGUI,
   options,
@@ -35,13 +35,10 @@ import { PathFader } from "./setup/path-visibility";
 import { Cinematic } from "./setup/cinematic";
 import { MotionTrails } from "./setup/trail";
 import { createTelemetry, computeKmPerUnit } from "./setup/telemetry";
+import { TimeTravel } from "./setup/time-travel";
 import { updateOrbitFlow } from "./setup/path";
 
 THREE.ColorManagement.enabled = false;
-
-// J2000 epoch (2000-01-01T12:00 UTC) — the same epoch the ephemeris uses for
-// mean longitudes, so the simulated date always matches the planet positions.
-const J2000_EPOCH = Date.UTC(2000, 0, 1, 12);
 
 const isEffectivelyVisible = (object: THREE.Object3D | null): boolean => {
   while (object) {
@@ -628,10 +625,21 @@ canvas.addEventListener("pointermove", (e) => {
 
 // Animate
 const clock = new THREE.Clock();
-// Seed the clock with the real current date — the ephemeris placed every
-// planet at its mean longitude for TODAY, so the sim-date HUD must also
-// start at today to describe the same instant (see ephemeris.ts).
+// Seed the clock with the real current date — the ephemeris places every
+// planet at its REAL position for TODAY (Keplerian elements), so the
+// sim-date HUD must also start at today to describe the same instant.
 let elapsedTime = initialElapsedTime;
+
+// Date travel — clicking the sim-date chip opens the picker; jumping
+// rewrites the sim clock (planets re-solve on the next tick) and clears
+// the motion trails, which span the old timeline.
+const timeTravel = new TimeTravel({
+  getElapsed: () => elapsedTime,
+  setElapsed: (elapsed) => {
+    elapsedTime = elapsed;
+    trails.clear();
+  },
+});
 
 fakeCamera.layers.enable(LAYERS.POILabel);
 
@@ -686,6 +694,7 @@ if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
     cinematic,
     trails,
     telemetry,
+    timeTravel,
   };
 }
 
@@ -729,13 +738,13 @@ if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
 
   // Update sim date HUD (throttled).
   // The clock is seeded to the real current date (see initialElapsedTime) —
-  // the same instant the ephemeris placed the planets at — so the HUD date
-  // and the sky always agree. At ×1 speed one real second = 8 simulated
+  // the same instant the Keplerian solver places the planets at — so the HUD
+  // date and the sky always agree. At ×1 speed one real second = 8 simulated
   // hours, so a 365-day Earth year takes 1095 real seconds.
   const nowMs = performance.now();
   if (nowMs - lastSimDateUpdate > 500) {
     lastSimDateUpdate = nowMs;
-    const simDate = new Date(J2000_EPOCH + (elapsedTime / 3) * 86400000);
+    const simDate = new Date(simDateMsFromElapsed(elapsedTime));
     const pad = (n: number) => String(n).padStart(2, "0");
     simDateEl.textContent = `Sim date · ${simDate.getUTCFullYear()}-${pad(
       simDate.getUTCMonth() + 1
