@@ -11,9 +11,9 @@ Three.js + Vite + TypeScript interactive solar-system simulator (personal portfo
 - `src/script.ts` — entry: scene, render/bloom pipeline, camera mode state machine, input handlers, main `tick()` loop
 - `src/index.html` — ALL DOM UI (tool rail, caption pill, panels, overlays); JS wires elements by ID
 - `src/planets.json` — body data (raw km values; shown in the info panel)
-- `src/setup/` — one module per subsystem: `planetary-object.ts` (Body class), `solar-system.ts` (hierarchy + true scale), `ephemeris.ts` (J2000), `starfield.ts`, `asteroid-belt.ts`, `fly.ts` (FPS mode), `free-camera.ts` (detached mode), `gui.ts` (lil-gui + toolbar wiring), `label.ts`, `tour.ts`, `nav-palette.ts`, `quiz.ts`, `tutorial.ts`, `path-visibility.ts`
+- `src/setup/` — one module per subsystem: `planetary-object.ts` (Body class), `solar-system.ts` (hierarchy + true scale), `ephemeris.ts` (JPL Keplerian elements), `starfield.ts` (8.9k HYG stars + 88 constellations), `events.ts` (observatory alignment/conjunction/eclipse scanner), `time-travel.ts`, `cinematic.ts`, `telemetry.ts`, `trail.ts`, `path.ts` + `path-visibility.ts`, `asteroid-belt.ts`, `rings.ts`, `lights.ts`, `environment-map.ts`, `textures.ts` + `texture-manifest.ts` (KTX2 w/ JPG fallback), `loading.ts`, `fly.ts` (FPS mode), `free-camera.ts` (detached mode), `gui.ts` (lil-gui + toolbar wiring), `label.ts`, `tour.ts`, `nav-palette.ts`, `quiz.ts`, `tutorial.ts`, `help-panel.ts`, `info-panel.ts`
 - `src/styles/` — SCSS per UI area; design tokens + shared recipes in `tokens.scss`
-- `static/textures/` — 20 MB of JPGs (main payload); `docs/IMPROVEMENTS-REPORT.md` is the roadmap
+- `static/textures/` — 30 JPG + 30 KTX2/Basis textures with JPG fallback via generated manifest (`setup/texture-manifest.ts`, built by `scripts/build-textures-ktx2.mjs`); `static/data/` holds `stars.json` (8,913 HYG stars) + `constellations.json` (88 IAU figures, built by `scripts/build-stars.mjs`); `docs/IMPROVEMENTS-REPORT.md` is the roadmap
 
 ## Architecture rules (violating these causes subtle bugs — details in code comments)
 - **Two cameras**: `fakeCamera` is driven (OrbitControls / FreeRoam / FreeCamera); `camera` (the render camera) is parented to the focused body's mesh and synced via per-frame `camera.copy(fakeCamera)`. Never render with `fakeCamera`.
@@ -28,5 +28,6 @@ Three.js + Vite + TypeScript interactive solar-system simulator (personal portfo
 - `THREE.ColorManagement.enabled = false` + `LinearSRGBColorSpace` output is the intended legacy look — don't "modernize" it.
 - The loading screen completes only when every `loadTexture` settles (success OR error counts) — new textures must go through `loadTexture`/`setTextureCount`.
 - Environment: Windows + Git Bash (CRLF warnings are harmless). `node_modules` on this machine suffered junk-file churn from an external process — if tsc/vite vanish, reinstall.
-- In-app-browser screenshots can artifact (blank canvas, "capture failed") — before chasing a phantom rendering bug, verify via `window.__solar` (dev-only debug hook: scene, cameras, `options`, controllers) or framebuffer readback.
+- In-app-browser screenshots can artifact (blank canvas, "capture failed") — before chasing a phantom rendering bug, verify via `window.__solar` (dev-only debug hook: scene, cameras, `options`, controllers incl. `cinematic`, `trails`, `telemetry`, `timeTravel`, `eventScanner`, `starfield`) or framebuffer readback.
 - Automated verification recipe: dev server + `window.__solar` (`solarSystem`, `options`, `fps.active`, `palette.onSelect(name)` to jump bodies) + screenshots. Real keyboard events via CUA may silently not reach the page — drive controllers directly instead.
+- Commit doc + screenshot updates together with the feature rounds they describe (STATUS.md + README `docs/screenshots/*.png` at 1600×900); don't let them drift a round behind.
