@@ -3,11 +3,18 @@ import * as THREE from "three";
 const cubeTextureLoader = new THREE.CubeTextureLoader();
 
 export const createEnvironmentMap = (directory: string) =>
-  cubeTextureLoader.load([
-    `${directory}/px.png`,
-    `${directory}/nx.png`,
-    `${directory}/py.png`,
-    `${directory}/ny.png`,
-    `${directory}/pz.png`,
-    `${directory}/nz.png`,
-  ]);
+  cubeTextureLoader.load(
+    [
+      `${directory}/px.png`,
+      `${directory}/nx.png`,
+      `${directory}/py.png`,
+      `${directory}/ny.png`,
+      `${directory}/pz.png`,
+      `${directory}/nz.png`,
+    ],
+    undefined,
+    undefined,
+    (event) => {
+      console.warn(`[environment-map] missing cube face for "${directory}":`, event);
+    }
+  );

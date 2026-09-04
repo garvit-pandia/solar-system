@@ -16,8 +16,11 @@ const DASH_DRIFT = 0.22;
 const DASH_SIZE = 0.12 * Math.PI * 2;
 const GAP_SIZE = 0.48 * Math.PI * 2;
 
-/** Per-material dash-offset uniforms, animated by {@link updateOrbitFlow}. */
-const dashOffsetUniforms: { value: number }[] = [];
+/** Per-material dash-offset uniforms, animated by {@link updateOrbitFlow}.
+ * Stored as a Set so {@link disposeOrbitFlow} can remove a single material's
+ * offset without leaving a tombstone behind — a uniform keeps its `value`
+ * field until it's dropped. */
+const dashOffsetUniforms: Set<{ value: number }> = new Set();
 
 export interface PathOptions {
   /**
@@ -48,8 +51,18 @@ const makeMaterial = (dashed: boolean): THREE.LineBasicMaterial => {
   // (LineDashedMaterial has no native offset). One closure per material —
   // each path keeps its own uniform object.
   const offset = { value: 0 };
-  dashOffsetUniforms.push(offset);
+  dashOffsetUniforms.add(offset);
+  // Store the uniform on the material so disposeOrbitFlow can find & remove it.
+  material.userData.dashOffset = offset;
+  // Stable cache key so three.js doesn't recompile every newly-created dashed
+  // path; they all share the same injected snippet. The dash-offset uniform
+  // lives on the material itself, not in the program.
+  material.customProgramCacheKey = () => "dash-flow";
   material.onBeforeCompile = (shader) => {
+    // Defensive: the marker we rewrite only exists in LineDashedMaterial's
+    // built-in vertex shader. If a future Three.js release refactors it, we
+    // bail rather than silently corrupting the shader source.
+    if (!shader.vertexShader.includes("vLineDistance = lineDistance;")) return;
     shader.uniforms.uDashOffset = offset;
     shader.vertexShader = shader.vertexShader.replace(
       "vLineDistance = lineDistance;",
@@ -125,4 +138,16 @@ export const createEllipsePath = (
 export const updateOrbitFlow = (elapsedTime: number): void => {
   const offset = (elapsedTime * DASH_DRIFT) % (DASH_SIZE + GAP_SIZE);
   for (const uniform of dashOffsetUniforms) uniform.value = offset;
+};
+
+/**
+ * Unregister a dashed-path material's offset from the per-frame drift set.
+ * Call this from the path owner's disposal hook so the uniform object is
+ * garbage-collected with the material instead of staying live forever.
+ * Safe to call multiple times for the same material.
+ */
+export const disposeOrbitFlow = (material: THREE.Material): void => {
+  const offset = material.userData?.dashOffset;
+  if (offset) dashOffsetUniforms.delete(offset);
+  delete material.userData.dashOffset;
 };

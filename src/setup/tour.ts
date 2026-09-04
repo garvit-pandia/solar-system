@@ -61,10 +61,11 @@ export class CinematicTour {
     this.infoPanel = options.infoPanel;
     this.getCurrentFocus = options.getCurrentFocus;
 
+    // Esc aborts the tour (ignore while typing in form fields).
+    document.addEventListener("keydown", this.onKeyDown);
     // Any user interaction during the tour aborts it (capture phase).
     document.addEventListener("pointerdown", this.onPointerDown, true);
   }
-
   start(): void {
     if (this.running) return;
 
@@ -115,6 +116,17 @@ export class CinematicTour {
   }
 
   private onPointerDown = (): void => {
+    if (this.running) this.stop();
+  };
+
+  private onKeyDown = (e: KeyboardEvent): void => {
+    if (e.key !== "Escape") return;
+    const target = e.target as HTMLElement | null;
+    if (target) {
+      const tag = target.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (target.isContentEditable) return;
+    }
     if (this.running) this.stop();
   };
 

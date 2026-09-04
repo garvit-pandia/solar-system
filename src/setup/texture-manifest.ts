@@ -30,3 +30,9 @@ export const KTX2_AVAILABLE: Set<string> = new Set([
   "venus-bump",
   "venus",
 ]);
+// Intentional JPG fallbacks: processed by the builder, but the KTX2 output
+// was larger than the source, so the loader serves the JPG. Pruned from disk.
+export const KTX2_JPG_FALLBACK: Set<string> = new Set([
+  "ganymede",
+  "io",
+]);

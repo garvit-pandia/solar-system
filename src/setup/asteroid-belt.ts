@@ -184,9 +184,13 @@ export class InstancedBelt {
         this.ys[i],
         Math.cos(angle) * this.radii[i]
       );
+      // Orbit angle intentionally NOT wrapped: small per-frame deltas keep
+      // numerical precision for long sessions; the rendered sin/cos stays
+      // bounded regardless of magnitude. Spin (rotation.y) IS wrapped to
+      // keep the angle bounded across long sessions.
       this.dummy.rotation.set(
         Math.sin(this.phases[i]) * 0.8,
-        rotationSpeed * elapsedTime + this.phases[i],
+        (rotationSpeed * elapsedTime) % (Math.PI * 2) + this.phases[i],
         Math.cos(this.phases[i]) * 0.8
       );
       this.dummy.scale.set(size, size, size * this.zScales[i]);

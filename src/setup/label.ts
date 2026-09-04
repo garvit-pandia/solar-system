@@ -86,6 +86,9 @@ export class Label {
    * then push overlapping labels apart in screen space.
    * @param camera - Camera used to calculate distance and direction to labels.
    */
+  // Only the focused body's labels are visible at any time: changeFocus
+  // calls showPOI() and other bodies' Label instances are hidden via
+  // hidePOI(). Collision work is therefore only needed for one set at a time.
   update = (camera: THREE.Camera) => {
     this.elements.forEach((label) => {
       const rotationOpacity = this.getRotationOpacity(camera, label);

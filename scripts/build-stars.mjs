@@ -30,6 +30,15 @@
  *                              the id -> proper name lookup, because the lines file
  *                              carries no names in its properties.
  *
+
+ * FALLBACK_URLS — if the pinned primary URL is unreachable, two mirrors of
+ * the HYG v3 CSV (hygdata_v3.csv) are available:
+ *   1. https://raw.githubusercontent.com/davidarmstrongson/HYG-Database/main/hygdata_v3.csv
+ *      (community fork tracking the upstream v3 release; commit may differ)
+ *   2. Local cache — any pre-vetted .tmp-stars/hygdata_v3.csv from a previous
+ *      successful run is reused without re-downloading. Drop the file into
+ *      .tmp-stars/ and re-run this script; no network is required.
+ *
  * Usage: node scripts/build-stars.mjs
  */
 
@@ -49,7 +58,33 @@ const kb = (bytes) => (bytes / 1024).toFixed(1) + " KB";
 function requireInput(name) {
   const p = join(tmpDir, name);
   if (!existsSync(p)) {
-    throw new Error(`Missing input ${p} — download it into .tmp-stars/ first (see the header comment of this script for URLs).`);
+    const urls = {
+      "hygdata_v3.csv": [
+        "https://raw.githubusercontent.com/astronexus/HYG-Database/71a24ceb97aa8fe6f13753a2d090c23fdacbe20c/hygdata_v3.csv  (pinned upstream)",
+        "https://raw.githubusercontent.com/davidarmstrongson/HYG-Database/main/hygdata_v3.csv  (community mirror)",
+      ],
+      "constellations.lines.json": [
+        "https://raw.githubusercontent.com/ofrohn/d3-celestial/master/data/constellations.lines.json",
+      ],
+      "constellations.json": [
+        "https://raw.githubusercontent.com/ofrohn/d3-celestial/master/data/constellations.json",
+      ],
+    }[name] ?? [];
+    const lines = [
+      `Missing input ${p}`,
+      "",
+      "Manual steps:",
+      "  1. Create the directory if absent:  mkdir -p .tmp-stars",
+      "  2. Download the file(s) below with curl -L -o .tmp-stars/<name> <url>",
+      "  3. Re-run:  node scripts/build-stars.mjs",
+      "",
+      "URLs:",
+      ...urls.map((u) => `  - ${u}`),
+      "",
+      "See the FALLBACK_URLS section at the top of this script for an alternate",
+      "source and a note about reusing a previously-downloaded local cache.",
+    ];
+    throw new Error(lines.join("\n"));
   }
   return p;
 }
