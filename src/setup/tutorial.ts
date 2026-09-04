@@ -153,19 +153,14 @@ export class Tutorial {
     el.className = "coach-mark";
     el.textContent = "Drag the sky to look around.";
     el.setAttribute("role", "status");
-    el.style.position = "fixed";
-    el.style.left = "50%";
-    el.style.bottom = "2rem";
-    el.style.transform = "translateX(-50%)";
-    el.style.maxWidth = "calc(100vw - 8rem)";
-    el.style.zIndex = "60";
-    el.style.cursor = "pointer";
+    // Positioning lives in .coach-mark (tutorial.scss) — no inline geometry.
     el.addEventListener("click", () => this.dismissCoachMark());
     el.addEventListener("mouseenter", () => this.pauseCoachTimer());
     el.addEventListener("mouseleave", () => this.resumeCoachTimer());
     // The chip teaches one gesture — retire it the moment the user performs
     // it (first real canvas drag), not just on timeout/click.
     window.addEventListener("pointerdown", this.dismissOnCanvasDrag, true);
+    document.body.appendChild(el);
     this.coachEl = el;
     this.coachRemainingMs = 8000;
     this.resumeCoachTimer();

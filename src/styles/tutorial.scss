@@ -95,20 +95,34 @@
   }
 }
 
-/* Coach mark — small glass chip for first-run guidance. */
+/* Coach mark — ambient first-run chip, bottom-centre above the caption. */
 .coach-mark {
-  @extend %glass-panel;
+  position: fixed;
+  left: 50%;
+  bottom: 5.5rem;
+  transform: translateX(-50%);
+  z-index: 60;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.45rem 0.85rem;
-  border-radius: $radius-btn;
+  max-width: calc(100vw - 8rem);
+  padding: 0.5rem 1.1rem;
+  background: $panel-bg-strong;
+  backdrop-filter: $panel-blur;
+  -webkit-backdrop-filter: $panel-blur;
+  border: $hairline;
+  border-radius: $radius-pill;
+  box-shadow: $panel-shadow;
   font-family: $font;
-  font-size: 0.68rem;
-  font-weight: 200;
-  letter-spacing: 0.06em;
-  line-height: 1.5;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
   color: $text-72;
+  opacity: 1;
+  cursor: pointer;
+  animation: coach-in 0.3s ease;
 }
 
 /* Spotlight tour */
@@ -234,28 +248,9 @@ body #planet-tooltip {
   z-index: 22;
 }
 
-/* Ambient coach chip — replaces the welcome wall on first boot. */
-.coach-mark {
-  padding: 0.45rem 1rem;
-  background: $panel-bg-strong;
-  backdrop-filter: $panel-blur;
-  -webkit-backdrop-filter: $panel-blur;
-  border: $hairline;
-  border-radius: $radius-pill;
-  box-shadow: $panel-shadow;
-  color: $text-72;
-  font-family: $font;
-  font-size: 0.62rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  animation: coach-in 0.3s ease;
-}
-
 /* While flying, the fps-hint owns bottom-centre — dock the coach above it. */
 body.fps-active .coach-mark {
-  bottom: 6.5rem !important;
+  bottom: 7rem;
 }
 
 @keyframes coach-in {
