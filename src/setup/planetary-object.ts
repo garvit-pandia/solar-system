@@ -32,6 +32,9 @@ export interface Body {
   distanceAU?: number;
   escapeVelocity?: number;
   funFact?: string;
+  composition?: string;
+  whyMatters?: string;
+  mission?: string;
 }
 
 interface TexturePaths {
@@ -227,20 +230,17 @@ export class PlanetaryObject {
     // (around their host). Rings have no orbit (distance 0 → a degenerate
     // zero-radius circle), so they get no path at all.
     if (this.orbits && this.type !== "ring") {
-      const dashed = this.orbits === "Sun";
       if (bodyHasElements(body.name)) {
         // Real Keplerian ellipse baked from the J2000 elements (unit
         // semi-major axis — scale is applied after baseDistance, below).
+        // Solid ring: dashes read as broken arcs from the top-down view.
         const segments = segmentCount(semiMajorAxisAU(body.name));
         this.path = createEllipsePath(
           orbitEllipsePointsAU(body.name, 0, segments)!,
-          segments,
-          { dashed }
+          segments
         );
       } else {
-        // Sun-orbiting rings get the animated dash "flow" (travel
-        // direction); moon rings stay solid — dashes would shimmer there.
-        this.path = createPath(this.distance, { dashed });
+        this.path = createPath(this.distance);
       }
       // Orbit paths must never intercept raycasts — otherwise clicks near a
       // parent body's orbit resolve to the wrong body (e.g. the Moon's path

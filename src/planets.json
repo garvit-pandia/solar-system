@@ -16,7 +16,10 @@
     "moons": 0,
     "distanceAU": 0,
     "escapeVelocity": 617.5,
-    "funFact": "The Sun holds 99.8% of all mass in the solar system."
+    "funFact": "The Sun holds 99.8% of all mass in the solar system.",
+    "composition": "hydrogen plasma",
+    "whyMatters": "It powers every climate in the system.",
+    "mission": "Parker Solar Probe (2018)"
   },
   {
     "name": "Mercury",
@@ -37,14 +40,17 @@
     "moons": 0,
     "distanceAU": 0.39,
     "escapeVelocity": 4.25,
-    "funFact": "A year on Mercury lasts just 88 days, but a single day lasts longer than its year."
+    "funFact": "A year on Mercury lasts just 88 days, but a single day lasts longer than its year.",
+    "composition": "iron-rich rock",
+    "whyMatters": "It records weathering beside a star.",
+    "mission": "MESSENGER (2011)"
   },
   {
     "name": "Venus",
     "radius": 6051.8,
     "distance": 108.2,
-    "period": 224,
-    "daylength": 2802,
+    "period": 224.7,
+    "daylength": -2802,
     "type": "planet",
     "orbits": "Sun",
     "tilt": 2.64,
@@ -58,13 +64,16 @@
     "moons": 0,
     "distanceAU": 0.72,
     "escapeVelocity": 10.36,
-    "funFact": "Venus spins backwards, so the Sun rises in the west."
+    "funFact": "Venus spins backwards, so the Sun rises in the west.",
+    "composition": "CO2 air over basalt",
+    "whyMatters": "It warns how atmospheres trap heat.",
+    "mission": "Magellan (1990)"
   },
   {
     "name": "Earth",
     "radius": 6371,
     "distance": 149.6,
-    "period": 365,
+    "period": 365.2,
     "daylength": 24,
     "type": "planet",
     "orbits": "Sun",
@@ -83,14 +92,17 @@
     "moons": 1,
     "distanceAU": 1,
     "escapeVelocity": 11.19,
-    "funFact": "The only known world with liquid-water oceans and life."
+    "funFact": "The only known world with liquid-water oceans and life.",
+    "composition": "air, oceans, rock",
+    "whyMatters": "It anchors the search for life.",
+    "mission": "International Space Station (1998)"
   },
   {
     "name": "Moon",
     "radius": 1737.4,
     "distance": 0.3844,
     "period": 0,
-    "daylength": -28,
+    "daylength": 655.7,
     "type": "moon",
     "orbits": "Earth",
     "tilt": 5.8,
@@ -124,14 +136,17 @@
     "moons": 0,
     "distanceAU": 0.0026,
     "escapeVelocity": 2.38,
-    "funFact": "The Moon drifts about 3.8 cm farther from Earth every year."
+    "funFact": "The Moon drifts about 3.8 cm farther from Earth every year.",
+    "composition": "silicate regolith",
+    "whyMatters": "It steadies Earth's tilt.",
+    "mission": "Apollo 11 (1969)"
   },
   {
     "name": "Mars",
     "radius": 3389.5,
     "distance": 227.9,
-    "period": 686,
-    "daylength": 24.7,
+    "period": 687,
+    "daylength": 24.6,
     "type": "planet",
     "orbits": "Sun",
     "tilt": 25.19,
@@ -176,7 +191,10 @@
     "moons": 2,
     "distanceAU": 1.52,
     "escapeVelocity": 5.03,
-    "funFact": "Home to Olympus Mons, the tallest volcano in the solar system."
+    "funFact": "Home to Olympus Mons, the tallest volcano in the solar system.",
+    "composition": "thin CO2 air, basalt",
+    "whyMatters": "It hosts the search for past life.",
+    "mission": "Perseverance (2021)"
   },
   {
     "name": "Ceres",
@@ -197,7 +215,10 @@
     "moons": 0,
     "distanceAU": 2.77,
     "escapeVelocity": 0.51,
-    "funFact": "The largest body in the asteroid belt — and the only dwarf planet that isn't in the Kuiper Belt."
+    "funFact": "The largest body in the asteroid belt \u2014 and the only dwarf planet that isn't in the Kuiper Belt.",
+    "composition": "ice and carbon rock",
+    "whyMatters": "It samples the dawn of the system.",
+    "mission": "Dawn (2015)"
   },
   {
     "name": "Jupiter",
@@ -224,13 +245,16 @@
     "moons": 95,
     "distanceAU": 5.2,
     "escapeVelocity": 59.5,
-    "funFact": "Its Great Red Spot is a storm larger than Earth that has raged for centuries."
+    "funFact": "Its Great Red Spot is a storm larger than Earth that has raged for centuries.",
+    "composition": "hydrogen-helium gas",
+    "whyMatters": "It sculpts the outer solar system.",
+    "mission": "Juno (2016)"
   },
   {
     "name": "Saturn",
     "radius": 58232,
     "distance": 1433.5,
-    "period": 10755,
+    "period": 10759,
     "daylength": 10.7,
     "type": "planet",
     "orbits": "Sun",
@@ -251,14 +275,17 @@
     "moons": 146,
     "distanceAU": 9.54,
     "escapeVelocity": 35.5,
-    "funFact": "Its rings are made of billions of chunks of ice and rock."
+    "funFact": "Its rings are made of billions of chunks of ice and rock.",
+    "composition": "hydrogen-helium gas",
+    "whyMatters": "It showcases planet formation.",
+    "mission": "Cassini (2004)"
   },
   {
     "name": "Uranus",
     "radius": 25362,
     "distance": 2872.5,
     "period": 30687,
-    "daylength": 17.2,
+    "daylength": -17.2,
     "type": "planet",
     "orbits": "Sun",
     "tilt": 82.23,
@@ -271,7 +298,10 @@
     "moons": 28,
     "distanceAU": 19.19,
     "escapeVelocity": 21.3,
-    "funFact": "Uranus rolls around the Sun on its side, tilted 98 degrees."
+    "funFact": "Uranus rolls around the Sun on its side, tilted 98 degrees.",
+    "composition": "hydrogen, helium, ices",
+    "whyMatters": "It exposes how impacts reshape planets.",
+    "mission": "Voyager 2 (1986)"
   },
   {
     "name": "Neptune",
@@ -298,7 +328,10 @@
     "moons": 16,
     "distanceAU": 30.07,
     "escapeVelocity": 23.5,
-    "funFact": "Neptune has the fastest winds in the solar system, over 2,000 km/h."
+    "funFact": "Neptune has the fastest winds in the solar system, over 2,000 km/h.",
+    "composition": "hydrogen, helium, ices",
+    "whyMatters": "It tests models of deep atmospheres.",
+    "mission": "Voyager 2 (1989)"
   },
   {
     "name": "Pluto",
@@ -319,7 +352,10 @@
     "moons": 5,
     "distanceAU": 39.48,
     "escapeVelocity": 1.21,
-    "funFact": "In 2006 the IAU reclassified Pluto as a dwarf planet — the first Kuiper Belt object ever found."
+    "funFact": "In 2006 the IAU reclassified Pluto as a dwarf planet \u2014 the first Kuiper Belt object ever found.",
+    "composition": "nitrogen and water ice",
+    "whyMatters": "It anchors the Kuiper Belt story.",
+    "mission": "New Horizons (2015)"
   },
   {
     "name": "Charon",
@@ -339,7 +375,10 @@
     "moons": 0,
     "distanceAU": 39.48,
     "escapeVelocity": 0.58,
-    "funFact": "Half the size of Pluto, Charon is so large that the two orbit a point between them — a double dwarf planet system."
+    "funFact": "Half the size of Pluto, Charon is so large that the two orbit a point between them \u2014 a double dwarf planet system.",
+    "composition": "water ice and rock",
+    "whyMatters": "It reveals how binary worlds evolve.",
+    "mission": "New Horizons (2015)"
   },
   {
     "name": "Eris",
@@ -360,14 +399,17 @@
     "moons": 1,
     "distanceAU": 67.7,
     "escapeVelocity": 1.38,
-    "funFact": "Its discovery in 2005 sparked the debate that ended with Pluto being reclassified."
+    "funFact": "Its discovery in 2005 sparked the debate that ended with Pluto being reclassified.",
+    "composition": "methane ice and rock",
+    "whyMatters": "It forced the definition of planethood.",
+    "mission": "Palomar Observatory (2005)"
   },
   {
     "name": "Makemake",
     "radius": 715,
     "distance": 6790,
     "period": 111780,
-    "daylength": 22.8,
+    "daylength": 22.5,
     "type": "planet",
     "category": "Dwarf planet",
     "orbits": "Sun",
@@ -381,7 +423,10 @@
     "moons": 1,
     "distanceAU": 45.4,
     "escapeVelocity": 0.52,
-    "funFact": "Named after the creator god of the Rapa Nui people of Easter Island."
+    "funFact": "Named after the creator god of the Rapa Nui people of Easter Island.",
+    "composition": "methane ice and rock",
+    "whyMatters": "It preserves pristine outer-system ice.",
+    "mission": "Palomar Observatory (2005)"
   },
   {
     "name": "Haumea",
@@ -402,7 +447,10 @@
     "moons": 2,
     "distanceAU": 43.2,
     "escapeVelocity": 0.84,
-    "funFact": "Spins once every 3.9 hours — the fastest-spinning large body in the solar system — stretching it into an ellipsoid."
+    "funFact": "Spins once every 3.9 hours \u2014 the fastest-spinning large body in the solar system \u2014 stretching it into an ellipsoid.",
+    "composition": "water ice over rock",
+    "whyMatters": "It shows how collisions reshape worlds.",
+    "mission": "Palomar Observatory (2004)"
   },
   {
     "name": "Rings of Saturn",
@@ -421,14 +469,17 @@
     "moons": 0,
     "distanceAU": 9.54,
     "escapeVelocity": 0,
-    "funFact": "Saturn's rings span 280,000 km yet are often less than a kilometre thick."
+    "funFact": "Saturn's rings span 280,000 km yet are often less than a kilometre thick.",
+    "composition": "water ice and rock",
+    "whyMatters": "They expose ring dynamics live.",
+    "mission": "Cassini (2004)"
   },
   {
     "name": "Ganymede",
     "radius": 2634.1,
     "distance": 1.0704,
     "period": 7.15,
-    "daylength": 9.9,
+    "daylength": 171.6,
     "type": "moon",
     "orbits": "Jupiter",
     "tilt": 3.33,
@@ -441,14 +492,17 @@
     "moons": 0,
     "distanceAU": 5.2,
     "escapeVelocity": 2.74,
-    "funFact": "The largest moon in the solar system — bigger than the planet Mercury."
+    "funFact": "The largest moon in the solar system \u2014 bigger than the planet Mercury.",
+    "composition": "water ice and rock",
+    "whyMatters": "It generates its own magnetic field.",
+    "mission": "Juno (2021)"
   },
   {
     "name": "Titan",
     "radius": 2574.7,
     "distance": 1.2219,
     "period": 15.95,
-    "daylength": 10.7,
+    "daylength": 382.7,
     "type": "moon",
     "orbits": "Saturn",
     "tilt": 27,
@@ -461,14 +515,17 @@
     "moons": 0,
     "distanceAU": 9.54,
     "escapeVelocity": 2.64,
-    "funFact": "The only moon with a thick atmosphere, full of orange methane haze."
+    "funFact": "The only moon with a thick atmosphere, full of orange methane haze.",
+    "composition": "nitrogen-methane air",
+    "whyMatters": "Its methane cycle mirrors Earth's.",
+    "mission": "Cassini-Huygens (2005)"
   },
   {
     "name": "Callisto",
     "radius": 2410.3,
     "distance": 1.8827,
     "period": 16.69,
-    "daylength": 9.9,
+    "daylength": 400.5,
     "type": "moon",
     "orbits": "Jupiter",
     "tilt": 0,
@@ -481,14 +538,17 @@
     "moons": 0,
     "distanceAU": 5.2,
     "escapeVelocity": 2.44,
-    "funFact": "One of the most heavily cratered worlds in the solar system."
+    "funFact": "One of the most heavily cratered worlds in the solar system.",
+    "composition": "water ice and rock",
+    "whyMatters": "Its craters count four billion years.",
+    "mission": "Galileo (1995)"
   },
   {
     "name": "Io",
     "radius": 1821.6,
     "distance": 0.4217,
     "period": 1.77,
-    "daylength": 9.9,
+    "daylength": 42.5,
     "type": "moon",
     "orbits": "Jupiter",
     "tilt": 0.05,
@@ -501,14 +561,17 @@
     "moons": 0,
     "distanceAU": 5.2,
     "escapeVelocity": 2.56,
-    "funFact": "The most volcanically active world known — over 400 active volcanoes."
+    "funFact": "The most volcanically active world known \u2014 over 400 active volcanoes.",
+    "composition": "volcanic silicate rock",
+    "whyMatters": "Its volcanoes reveal tidal heating.",
+    "mission": "Voyager 1 (1979)"
   },
   {
     "name": "Europa",
     "radius": 1560.8,
     "distance": 0.6711,
     "period": 3.55,
-    "daylength": 9.9,
+    "daylength": 85.2,
     "type": "moon",
     "orbits": "Jupiter",
     "tilt": 0.47,
@@ -521,14 +584,17 @@
     "moons": 0,
     "distanceAU": 5.2,
     "escapeVelocity": 2.02,
-    "funFact": "Its icy crust hides a salty ocean that may harbour life."
+    "funFact": "Its icy crust hides a salty ocean that may harbour life.",
+    "composition": "ice crust, salty ocean",
+    "whyMatters": "Its ocean may harbour life.",
+    "mission": "Europa Clipper (2024)"
   },
   {
     "name": "Triton",
     "radius": 1353.4,
     "distance": 0.3548,
     "period": 5.87,
-    "daylength": 16.1,
+    "daylength": -141,
     "type": "moon",
     "orbits": "Neptune",
     "tilt": 156,
@@ -541,6 +607,9 @@
     "moons": 0,
     "distanceAU": 30.07,
     "escapeVelocity": 1.46,
-    "funFact": "Triton orbits Neptune backwards, a captured Kuiper Belt object."
+    "funFact": "Triton orbits Neptune backwards, a captured Kuiper Belt object.",
+    "composition": "nitrogen ice and rock",
+    "whyMatters": "Its orbit proves a Kuiper Belt capture.",
+    "mission": "Voyager 2 (1989)"
   }
 ]

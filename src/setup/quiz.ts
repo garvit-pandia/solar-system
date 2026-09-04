@@ -1,9 +1,10 @@
-import planetData from "../planets.json";
 import { Body } from "./planetary-object";
 
 interface QuizQuestion {
   question: string;
   answer: string;
+  options: string[];
+  explanation: string;
 }
 
 const TOTAL_QUESTIONS = 6;
@@ -11,18 +12,30 @@ const FEEDBACK_DELAY_MS = 1400;
 const BEST_KEY = "solar-quiz-best";
 
 const QUESTION_POOL: QuizQuestion[] = [
-  { question: "Which planet has the shortest day?", answer: "Jupiter" },
-  { question: "Which planet has the longest day?", answer: "Venus" },
-  { question: "Which planet is the hottest?", answer: "Venus" },
-  { question: "Which planet is the coldest?", answer: "Neptune" },
-  { question: "Which planet is the largest?", answer: "Jupiter" },
-  { question: "Which planet has the most moons?", answer: "Saturn" },
-  { question: "Which planet has the longest year?", answer: "Neptune" },
-  { question: "Which planet has the shortest year?", answer: "Mercury" },
-  { question: "Which planet is closest to the Sun?", answer: "Mercury" },
-  { question: "Which planet has the strongest gravity?", answer: "Jupiter" },
-  { question: "Which planet is the Red Planet?", answer: "Mars" },
-  { question: "Which planet has the most prominent rings?", answer: "Saturn" },
+  { question: "Which planet has the shortest day?", answer: "Jupiter", options: ["Jupiter", "Saturn", "Mars", "Earth"], explanation: "Jupiter whips around once every 9.9 hours, faster than any other major planet." },
+  { question: "Which planet has the longest day?", answer: "Venus", options: ["Venus", "Mars", "Jupiter", "Saturn"], explanation: "Venus spins backward, so its Sun rises in the west." },
+  { question: "Which planet is the hottest?", answer: "Venus", options: ["Venus", "Mercury", "Mars", "Jupiter"], explanation: "Venus traps heat under thick carbon dioxide until its surface melts lead." },
+  { question: "Which planet is the coldest?", answer: "Neptune", options: ["Neptune", "Uranus", "Saturn", "Jupiter"], explanation: "Neptune averages minus 200 degrees, the coldest mean temperature of any major planet." },
+  { question: "Which planet is the largest?", answer: "Jupiter", options: ["Jupiter", "Saturn", "Neptune", "Earth"], explanation: "Jupiter holds more mass than all the other planets combined." },
+  { question: "Which planet has the most moons?", answer: "Saturn", options: ["Saturn", "Jupiter", "Uranus", "Neptune"], explanation: "Saturn holds 146 confirmed moons, more than any other planet." },
+  { question: "Which planet has the longest year?", answer: "Neptune", options: ["Neptune", "Uranus", "Saturn", "Jupiter"], explanation: "Neptune takes 60190 days to circle the Sun once." },
+  { question: "Which planet has the shortest year?", answer: "Mercury", options: ["Mercury", "Venus", "Earth", "Mars"], explanation: "Mercury races around the Sun in just 88 days." },
+  { question: "Which planet is closest to the Sun?", answer: "Mercury", options: ["Mercury", "Venus", "Earth", "Mars"], explanation: "Mercury orbits nearest the Sun at just 0.39 AU." },
+  { question: "Which planet has the strongest gravity?", answer: "Jupiter", options: ["Jupiter", "Saturn", "Neptune", "Earth"], explanation: "Jupiter pulls with 24.79 metres per second squared, the strongest grip of any planet." },
+  { question: "Which planet is the Red Planet?", answer: "Mars", options: ["Mars", "Mercury", "Venus", "Jupiter"], explanation: "Mars glows red from iron oxide dust coating its surface." },
+  { question: "Which planet has the most prominent rings?", answer: "Saturn", options: ["Saturn", "Jupiter", "Uranus", "Neptune"], explanation: "Saturn wears broad water-ice rings spanning 280000 kilometres." },
+  { question: "Which planet did Voyager 2 visit in 1989?", answer: "Neptune", options: ["Neptune", "Uranus", "Saturn", "Jupiter"], explanation: "Voyager 2 flew past Neptune in 1989 and recorded its supersonic winds." },
+  { question: "Which planet did Cassini orbit starting in 2004?", answer: "Saturn", options: ["Saturn", "Jupiter", "Uranus", "Neptune"], explanation: "Cassini orbited Saturn from 2004 and revealed its rings as water ice and rock." },
+  { question: "Which planet spins once every 24.6 hours?", answer: "Mars", options: ["Mars", "Earth", "Mercury", "Venus"], explanation: "Mars turns in about a day and hosts the Perseverance rover that landed in 2021." },
+  { question: "Which planet takes 687 days to orbit the Sun?", answer: "Mars", options: ["Mars", "Earth", "Venus", "Mercury"], explanation: "Mars circles the Sun in 687 days beneath a thin carbon-dioxide sky." },
+  { question: "Which planet hides beneath clouds mapped by Magellan?", answer: "Venus", options: ["Venus", "Mercury", "Mars", "Jupiter"], explanation: "Magellan mapped Venus in 1990 through clouds that drive a runaway greenhouse effect." },
+  { question: "Which planet did Juno reach in 2016?", answer: "Jupiter", options: ["Jupiter", "Saturn", "Uranus", "Neptune"], explanation: "Juno reached Jupiter in 2016 to probe its deep hydrogen-helium envelope." },
+  { question: "Which planet did MESSENGER orbit from 2011?", answer: "Mercury", options: ["Mercury", "Venus", "Mars", "Earth"], explanation: "MESSENGER orbited Mercury from 2011 and mapped its iron-rich surface." },
+  { question: "Which dwarf planet did New Horizons visit in 2015?", answer: "Pluto", options: ["Pluto", "Eris", "Makemake", "Haumea"], explanation: "New Horizons flew past Pluto in 2015 and found nitrogen glaciers." },
+  { question: "Which dwarf planet spins once every 3.9 hours?", answer: "Haumea", options: ["Haumea", "Pluto", "Eris", "Makemake"], explanation: "Haumea spins every 3.9 hours, stretching itself into an ellipsoid." },
+  { question: "Which world did Dawn orbit in 2015?", answer: "Ceres", options: ["Ceres", "Pluto", "Eris", "Haumea"], explanation: "Dawn orbited Ceres in 2015 and found water ice beneath its dark crust." },
+  { question: "Which dwarf planet forced the definition of planethood?", answer: "Eris", options: ["Eris", "Pluto", "Makemake", "Ceres"], explanation: "Eris triggered the 2006 debate that reclassified Pluto as a dwarf planet." },
+  { question: "Which planet takes 365 days to orbit the Sun?", answer: "Earth", options: ["Earth", "Venus", "Mars", "Mercury"], explanation: "Earth circles the Sun in 365 days with the only known oceans and life." },
 ];
 
 const shuffle = <T>(items: T[]): T[] => {
@@ -43,6 +56,7 @@ export class Quiz {
   private questionEl: HTMLElement;
   private optionsEl: HTMLElement;
   private feedbackEl: HTMLElement;
+  private explanationEl: HTMLElement;
   private metaEl: HTMLElement;
   private progressEl: HTMLElement;
   private scoreEl: HTMLElement;
@@ -50,7 +64,6 @@ export class Quiz {
   private finalScoreEl: HTMLElement;
   private bestEl: HTMLElement;
 
-  private planetNames: string[];
   private questions: QuizQuestion[] = [];
   private index = 0;
   private score = 0;
@@ -58,12 +71,8 @@ export class Quiz {
   private lock = false;
 
   constructor() {
-    const bodies: Body[] = planetData;
-    this.planetNames = bodies
-      .filter((body) => body.type === "planet")
-      .map((body) => body.name);
-
     this.card = document.getElementById("quiz-card")!;
+    this.explanationEl = document.getElementById("quiz-explanation")!;
     this.startBtn = document.getElementById("btn-quiz")!;
     this.closeBtn = document.getElementById("btn-quiz-close")!;
     this.againBtn = document.getElementById("btn-quiz-again")!;
@@ -96,15 +105,15 @@ export class Quiz {
     this.score = 0;
     this.index = 0;
     this.questions = shuffle(QUESTION_POOL).slice(0, TOTAL_QUESTIONS);
-
     this.feedbackEl.textContent = "";
     this.feedbackEl.classList.remove("correct", "wrong", "hint");
+    this.explanationEl.textContent = "";
 
     this.questionEl.style.display = "";
     this.optionsEl.style.display = "";
     this.feedbackEl.style.display = "";
+    this.explanationEl.style.display = "";
     this.metaEl.style.display = "";
-    this.closeBtn.style.display = "";
     this.resultEl.style.display = "none";
 
     this.card.classList.add("visible");
@@ -119,18 +128,29 @@ export class Quiz {
     this.questionEl.style.display = "";
     this.optionsEl.style.display = "";
     this.feedbackEl.style.display = "";
+    this.explanationEl.style.display = "";
     this.metaEl.style.display = "";
     this.closeBtn.style.display = "";
     this.resultEl.style.display = "";
 
     this.feedbackEl.textContent = "";
     this.feedbackEl.classList.remove("correct", "wrong", "hint");
+    this.explanationEl.textContent = "";
   };
 
   handlePlanetClick = (body: Body | null): void => {
     if (!this.active || this.lock) return;
 
     if (body === null) {
+      this.feedbackEl.textContent =
+        "Pick an option below, or click a planet in the 3D scene!";
+      this.feedbackEl.classList.remove("correct", "wrong");
+      this.feedbackEl.classList.add("hint");
+      return;
+    }
+
+    const current = this.questions[this.index];
+    if (current && !current.options.includes(body.name)) {
       this.feedbackEl.textContent =
         "Pick an option below, or click a planet in the 3D scene!";
       this.feedbackEl.classList.remove("correct", "wrong");
@@ -168,8 +188,7 @@ export class Quiz {
       this.feedbackEl.classList.remove("correct", "hint");
       this.feedbackEl.classList.add("wrong");
     }
-
-    this.lock = true;
+    this.explanationEl.textContent = current.explanation;
     window.setTimeout(() => {
       this.lock = false;
       if (!this.active) return;
@@ -188,10 +207,7 @@ export class Quiz {
 
     this.questionEl.textContent = `Q: ${current.question}`;
 
-    const decoys = shuffle(
-      this.planetNames.filter((name) => name !== current.answer)
-    ).slice(0, 2);
-    const options = shuffle([current.answer, ...decoys]);
+    const options = shuffle(current.options);
 
     this.optionsEl.innerHTML = "";
     for (const name of options) {
@@ -203,14 +219,17 @@ export class Quiz {
       this.optionsEl.appendChild(chip);
     }
 
+    this.feedbackEl.textContent = "";
+    this.feedbackEl.classList.remove("correct", "wrong", "hint");
+    this.explanationEl.textContent = "";
     this.progressEl.textContent = `Q ${this.index + 1} / ${TOTAL_QUESTIONS}`;
     this.scoreEl.textContent = `Score ${this.score}`;
   };
-
   private showResult = (): void => {
     this.questionEl.style.display = "none";
     this.optionsEl.style.display = "none";
     this.feedbackEl.style.display = "none";
+    this.explanationEl.style.display = "none";
     this.metaEl.style.display = "none";
     this.closeBtn.style.display = "none";
     this.resultEl.style.display = "block";

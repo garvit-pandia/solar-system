@@ -112,6 +112,9 @@
         <div class="info-row"><span>Gravity</span><span id="info-gravity"></span></div>
         <div class="info-row"><span>Moons</span><span id="info-moons"></span></div>
         <div class="info-row"><span>Distance</span><span id="info-distance"></span></div>
+        <div class="info-row"><span>Composition</span><span id="info-composition"></span></div>
+        <div class="info-row"><span>Why it matters</span><span id="info-why"></span></div>
+        <div class="info-row"><span>Mission</span><span id="info-mission"></span></div>
       </div>
       <div class="info-fact" id="info-fact"></div>
     </div>
@@ -161,6 +164,8 @@
       <span class="tel-item"><span class="tel-label">Scale</span><span class="tel-value" id="tel-scale"></span></span>
       <span class="tel-sep" aria-hidden="true"></span>
       <span class="tel-item"><span class="tel-label">Rate</span><span class="tel-value" id="tel-rate"></span></span>
+      <span class="tel-sep" aria-hidden="true"></span>
+      <span class="tel-item"><span class="tel-label">Light</span><span class="tel-value" id="tel-light"></span></span>
     </div>
     <div id="planet-tooltip"></div>
 
@@ -263,7 +268,7 @@
             all real; moons keep simplified circular orbits. Times are UTC.
             The telemetry strip beneath shows live numbers: distance to the
             focused body (AU/km), its mean orbital velocity, the on-screen
-            scale (1 px ≈ N km) and the sim rate.
+            scale (1 px ≈ N km), the sim rate, and the light travel time from the focused body.
           </p>
         </section>
 
@@ -283,6 +288,7 @@
       <p id="quiz-question"></p>
       <div id="quiz-options"></div>
       <p id="quiz-feedback"></p>
+      <p id="quiz-explanation"></p>
       <div class="quiz-meta">
         <span id="quiz-progress"></span>
         <span id="quiz-score"></span>

@@ -148,7 +148,7 @@ export class EventScanner {
       this.raise(
         `align-cluster-${bestClusterName}`,
         `${bestCluster}-planet alignment`,
-        `${bestCluster} planets line up within ${CLUSTER_ALIGNMENT}° as seen from the Sun — fly to ${bestClusterName} and look back.`,
+        `${bestCluster} planets line up within ${CLUSTER_ALIGNMENT}° as seen from the Sun — fly to ${bestClusterName} and look back. Clusters look tight from the Sun because the planets share a thin orbital plane.`,
         0,
         1
       );
@@ -156,7 +156,7 @@ export class EventScanner {
       this.raise(
         `align-${bestPairA}-${bestPairB}`,
         "Planetary alignment",
-        `${bestPairA} and ${bestPairB} sit ${bestPair.toFixed(1)}° apart as seen from the Sun.`,
+        `${bestPairA} and ${bestPairB} sit ${bestPair.toFixed(1)}° apart as seen from the Sun. Alignments look striking from the Sun because the planets orbit near one plane.`,
         bestPair,
         PAIR_ALIGNMENT
       );
@@ -190,7 +190,7 @@ export class EventScanner {
       this.raise(
         `conj-${bestA}-${bestB}`,
         "Conjunction",
-        `${bestA} and ${bestB} pass within ${best.toFixed(1)}° of each other in Earth's sky.`,
+        `${bestA} and ${bestB} pass within ${best.toFixed(1)}° of each other in Earth's sky. Conjunctions recur as the faster planet laps the slower one along Earth's line of sight.`,
         best,
         CONJUNCTION
       );
@@ -216,7 +216,7 @@ export class EventScanner {
     this.raise(
       "eclipse-lunar",
       "Lunar eclipse",
-      "The Moon is entering Earth's shadow — watch it dim from Earth.",
+      "The Moon is entering Earth's shadow — watch it dim from Earth. It happens at full Moon when the Sun, Earth, and Moon line up.",
       lunarSep,
       ECLIPSE
     );
@@ -225,7 +225,7 @@ export class EventScanner {
     this.raise(
       "eclipse-solar",
       "Solar eclipse",
-      "The Moon crosses the Sun's face as seen from Earth.",
+      "The Moon crosses the Sun's face as seen from Earth. It happens at new Moon when the Moon lines up between the Sun and Earth.",
       solarSep,
       ECLIPSE
     );

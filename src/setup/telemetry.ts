@@ -30,6 +30,26 @@ const formatRate = (): string => {
   return `×${magnitude < 10 ? magnitude.toFixed(magnitude % 1 ? 2 : 0) : Math.round(magnitude)} · ${rate}${arrow}`;
 };
 
+// Exact defined speed of light. One astronomical unit (AU_KM = 149597870.7)
+// divided by c equals about 499.0 seconds (about 8.317 minutes per AU),
+// which is why the Sun reads about 8m19s from Earth.
+const SPEED_OF_LIGHT_KM_S = 299792.458;
+
+const formatLight = (seconds: number): string => {
+  if (!Number.isFinite(seconds) || seconds < 0) return "—";
+  if (seconds < 60) return `${Math.round(seconds)}s`;
+  if (seconds < 3600) {
+    const total = Math.round(seconds);
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return `${m}m${String(s).padStart(2, "0")}s`;
+  }
+  const totalMinutes = Math.round(seconds / 60);
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  return `${h}h${String(m).padStart(2, "0")}m`;
+};
+
 export interface TelemetryInput {
   /** Camera → focus distance, in WORLD units. */
   worldDistance: number;
@@ -57,10 +77,11 @@ export const createTelemetry = () => {
   const velEl = document.getElementById("tel-vel");
   const scaleEl = document.getElementById("tel-scale");
   const rateEl = document.getElementById("tel-rate");
+  const lightEl = document.getElementById("tel-light");
 
   return {
     update(input: TelemetryInput): void {
-      if (!root || !distEl || !velEl || !scaleEl || !rateEl) return;
+      if (!root || !distEl || !velEl || !scaleEl || !rateEl || !lightEl) return;
 
       const km = input.worldDistance * input.kmPerUnit;
       const au = km / AU_KM;
@@ -78,6 +99,7 @@ export const createTelemetry = () => {
       scaleEl.textContent = `1 px ≈ ${formatScale(worldPerPixel * input.kmPerUnit)}`;
 
       rateEl.textContent = formatRate();
+      lightEl.textContent = formatLight(km / SPEED_OF_LIGHT_KM_S);
     },
   };
 };

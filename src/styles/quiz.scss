@@ -93,6 +93,14 @@
     }
   }
 
+  #quiz-explanation {
+    margin-top: 0.3rem;
+    font-size: 0.7rem;
+    line-height: 1.45;
+    color: $text-60;
+    font-family: $font;
+  }
+
   .quiz-meta {
     display: flex;
     justify-content: space-between;

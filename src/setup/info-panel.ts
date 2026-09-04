@@ -10,6 +10,9 @@ export class InfoPanel {
   private gravityEl: HTMLElement;
   private moonsEl: HTMLElement;
   private distanceEl: HTMLElement;
+  private compositionEl: HTMLElement;
+  private whyEl: HTMLElement;
+  private missionEl: HTMLElement;
   private factEl: HTMLElement;
   isOpen = false;
 
@@ -23,6 +26,9 @@ export class InfoPanel {
     this.gravityEl = document.getElementById("info-gravity") as HTMLElement;
     this.moonsEl = document.getElementById("info-moons") as HTMLElement;
     this.distanceEl = document.getElementById("info-distance") as HTMLElement;
+    this.compositionEl = document.getElementById("info-composition") as HTMLElement;
+    this.whyEl = document.getElementById("info-why") as HTMLElement;
+    this.missionEl = document.getElementById("info-mission") as HTMLElement;
     this.factEl = document.getElementById("info-fact") as HTMLElement;
 
     document
@@ -48,6 +54,9 @@ export class InfoPanel {
       body.distanceAU !== undefined
         ? body.distanceAU.toLocaleString() + " AU"
         : "—";
+    this.compositionEl.textContent = body.composition ?? "—";
+    this.whyEl.textContent = body.whyMatters ?? "—";
+    this.missionEl.textContent = body.mission ?? "—";
     this.factEl.textContent = body.funFact ?? "";
     this.factEl.style.display = body.funFact ? "block" : "none";
     this.element.classList.add("visible");
