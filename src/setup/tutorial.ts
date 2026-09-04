@@ -1,5 +1,26 @@
 const STORAGE_KEY = "solar-tutorial-seen";
 
+const COACH_STORAGE_KEY = "solar-coach-seen";
+
+type CoachStep = "drag" | "hover" | "search" | "roam" | "settings";
+
+const COACH_STEPS: CoachStep[] = ["drag", "hover", "search", "roam", "settings"];
+
+type CoachSeen = Record<CoachStep, boolean>;
+
+const readCoachSeen = (): CoachSeen => {
+  const fallback = Object.fromEntries(
+    COACH_STEPS.map((step) => [step, false])
+  ) as CoachSeen;
+  try {
+    const raw = localStorage.getItem(COACH_STORAGE_KEY);
+    if (!raw) return fallback;
+    return { ...fallback, ...(JSON.parse(raw) as Partial<CoachSeen>) };
+  } catch {
+    return fallback;
+  }
+};
+
 interface TutorialStep {
   title: string;
   body: string;
@@ -49,7 +70,7 @@ const STEPS: TutorialStep[] = [
   },
   {
     title: "Free roam",
-    body: "The Free Roam button starts first-person flight — WASD to move, move the mouse over the 3D view to look, Space/C to rise and dive, Shift to boost. The toolbar stays clickable while flying; press Esc to return to orbit — your position is remembered for next time.",
+    body: "The Free Roam button starts first-person flight — WASD to move, click the view to capture the pointer for continuous look, Space/C to rise and sink, Shift to boost, scroll for speed. Esc releases the pointer; Esc again exits and the camera holds its pose.",
     target: "#btn-fps",
   },
   {
@@ -68,6 +89,10 @@ export class Tutorial {
   private counter: HTMLElement;
   private stepIndex = 0;
   private active = false;
+  private coachEl: HTMLElement | null = null;
+  private coachTimer = 0;
+  private coachRemainingMs = 8000;
+  private coachShownAt = 0;
 
   constructor() {
     this.welcome = document.getElementById("welcome-card") as HTMLElement;
@@ -80,9 +105,6 @@ export class Tutorial {
     this.counter = document.getElementById("spotlight-counter") as HTMLElement;
 
     document
-      .getElementById("btn-help")
-      ?.addEventListener("click", () => this.showWelcome());
-    document
       .getElementById("btn-skip-welcome")
       ?.addEventListener("click", () => this.dismissWelcome());
     document
@@ -90,6 +112,20 @@ export class Tutorial {
       ?.addEventListener("click", () => {
         this.dismissWelcome();
         this.startTour();
+      });
+    // Welcome-card button: close the card, mark the tour seen, then open
+    // the help reference. HelpPanel already toggles on #btn-guide2, so only
+    // fall back to #btn-help when the panel is still closed afterwards.
+    document
+      .getElementById("btn-guide2")
+      ?.addEventListener("click", () => {
+        this.dismissWelcome();
+        window.setTimeout(() => {
+          const panel = document.getElementById("help-panel");
+          if (panel && !panel.classList.contains("visible")) {
+            document.getElementById("btn-help")?.click();
+          }
+        }, 0);
       });
     document
       .getElementById("btn-skip-tour")
@@ -104,18 +140,81 @@ export class Tutorial {
   }
 
   init() {
-    if (!this.hasSeenTutorial()) {
-      this.showWelcome();
+    // First visit: no welcome wall. Show one ambient coach chip instead;
+    // the guided tour stays launchable from the help panel.
+    if (!readCoachSeen().drag) {
+      this.showCoachMark();
     }
   }
 
-  private hasSeenTutorial(): boolean {
-    try {
-      return localStorage.getItem(STORAGE_KEY) === "true";
-    } catch {
-      return false;
-    }
+  private showCoachMark() {
+    if (this.coachEl) return;
+    const el = document.createElement("div");
+    el.className = "coach-mark";
+    el.textContent = "Drag the sky to look around.";
+    el.setAttribute("role", "status");
+    el.style.position = "fixed";
+    el.style.left = "50%";
+    el.style.bottom = "2rem";
+    el.style.transform = "translateX(-50%)";
+    el.style.maxWidth = "calc(100vw - 8rem)";
+    el.style.zIndex = "60";
+    el.style.cursor = "pointer";
+    el.addEventListener("click", () => this.dismissCoachMark());
+    el.addEventListener("mouseenter", () => this.pauseCoachTimer());
+    el.addEventListener("mouseleave", () => this.resumeCoachTimer());
+    // The chip teaches one gesture — retire it the moment the user performs
+    // it (first real canvas drag), not just on timeout/click.
+    window.addEventListener("pointerdown", this.dismissOnCanvasDrag, true);
+    this.coachEl = el;
+    this.coachRemainingMs = 8000;
+    this.resumeCoachTimer();
   }
+
+  private pauseCoachTimer() {
+    if (!this.coachTimer) return;
+    window.clearTimeout(this.coachTimer);
+    this.coachTimer = 0;
+    this.coachRemainingMs = Math.max(
+      0,
+      this.coachRemainingMs - (performance.now() - this.coachShownAt)
+    );
+  }
+
+  private resumeCoachTimer() {
+    if (!this.coachEl || this.coachTimer) return;
+    this.coachShownAt = performance.now();
+    this.coachTimer = window.setTimeout(
+      () => this.dismissCoachMark(),
+      this.coachRemainingMs
+    );
+  }
+
+  private dismissOnCanvasDrag = (e: PointerEvent): void => {
+    if (!this.coachEl) return;
+    if ((e.target as HTMLElement | null)?.closest("canvas.webgl")) {
+      this.dismissCoachMark();
+    }
+  };
+
+  private dismissCoachMark() {
+    if (this.coachTimer) {
+      window.clearTimeout(this.coachTimer);
+      this.coachTimer = 0;
+    }
+    window.removeEventListener("pointerdown", this.dismissOnCanvasDrag, true);
+    try {
+      localStorage.setItem(
+        COACH_STORAGE_KEY,
+        JSON.stringify({ ...readCoachSeen(), drag: true })
+      );
+    } catch {
+      /* private mode — fall back to showing every load */
+    }
+    this.coachEl?.remove();
+    this.coachEl = null;
+  }
+
 
   private markSeen() {
     try {
@@ -135,6 +234,7 @@ export class Tutorial {
   }
 
   private startTour() {
+    this.dismissCoachMark();
     this.active = true;
     this.stepIndex = 0;
     this.spotlight.classList.add("visible");

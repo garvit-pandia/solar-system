@@ -257,19 +257,9 @@ const applyScaleMode = (enabled: boolean) => {
   pathFader.applyTrueScale(enabled);
   // The giant true-scale Sun blows out the bloom halo into a muddy blob —
   // tone the bloom down while true scale is active.
-  bloomStrength = enabled ? 0.15 : 0.75;
+  bloomStrength = enabled ? 0.12 : 0.6;
   bloomPass.strength = bloomStrength;
-  // The true-scale system spans ~700,000 world units (Neptune's orbit);
-  // extend the far plane and speed up zooming so the scale change is usable.
   setCameraFar(enabled ? FAR_TRUE_SCALE : FAR_VIEW);
-  controls.zoomSpeed = enabled ? 2.0 : 1.0;
-  // The point light's shadow camera only covers 30 units around the Sun —
-  // at 700k-unit orbits it renders six 4096² faces for nothing. Shadows are
-  // a view-mode feature; drop them in true scale.
-  pointLight.castShadow = !enabled;
-  // Orbit rings act as the reference grid in true scale — without them the
-  // planets are sub-pixel dots lost in the void. Force the PLANET rings on
-  // for the duration, then restore the user's choice when switching back.
   if (enabled) {
     if (savedPlanetPaths === null) {
       savedPlanetPaths = options.showPlanetPaths;
@@ -280,7 +270,7 @@ const applyScaleMode = (enabled: boolean) => {
     savedPlanetPaths = null;
   }
   applyPathVisibility(solarSystem);
-  syncToolbar();
+  syncToolbar(fakeCamera);
   scaleMorph.active = true;
   scaleMorph.t = 0;
   scaleMorph.from = from;
@@ -310,6 +300,9 @@ const applyScaleMode = (enabled: boolean) => {
 // through the body guarantees a lit view.
 const focusAimPos = new THREE.Vector3();
 const sunDirLocal = new THREE.Vector3();
+// Module-scope scratch: avoid per-call `new THREE.Vector3(0,1,0)` allocations
+// in the setDayside path (called on every focus change).
+const UP_Y = new THREE.Vector3(0, 1, 0);
 const setDaysideCameraPosition = (
   object: PlanetaryObject,
   minDistance: number
@@ -327,7 +320,7 @@ const setDaysideCameraPosition = (
   fakeCamera.position
     .copy(sunDirLocal)
     .multiplyScalar(minDistance * 1.3)
-    .addScaledVector(new THREE.Vector3(0, 1, 0), minDistance * 0.45);
+    .addScaledVector(UP_Y, minDistance * 0.45);
 };
 
 const changeFocus = (oldFocus: string, newFocus: string) => {
@@ -358,14 +351,21 @@ const changeFocus = (oldFocus: string, newFocus: string) => {
   captionEl.innerHTML = newFocus;
 };
 
-// Camera
+// Camera — boot pose is a scene-root free-roam view at world (-7.5, 9, 24)
+// aimed at the Sun's centre. The cameras are never parented to a body mesh,
+// so entering free roam later continues from this exact pose (FreeRoam.enter
+// seeds its yaw/pitch from the camera quaternion — no teleport).
 const aspect = sizes.width / sizes.height;
 const camera = new THREE.PerspectiveCamera(75, aspect, 0.1, FAR_VIEW);
-camera.position.set(0, 20, 0);
-solarSystem["Sun"].mesh.add(camera);
+camera.position.set(-7.5, 9, 24);
+scene.add(camera);
 
 // Controls
 const fakeCamera = camera.clone();
+scene.add(fakeCamera);
+solarSystem["Sun"].mesh.getWorldPosition(focusAimPos);
+fakeCamera.lookAt(focusAimPos);
+camera.quaternion.copy(fakeCamera.quaternion);
 const controls = new OrbitControls(fakeCamera, canvas);
 controls.target = solarSystem["Sun"].mesh.position;
 controls.enableDamping = true;
@@ -385,12 +385,14 @@ const renderScene = new RenderPass(scene, camera);
 // Bloom renders at HALF resolution — its internal blur chain is built at
 // construction size, so ~4× less fill-rate work for a visually identical
 // soft halo. rebuildBloom() recreates it on window resize.
-let bloomStrength = 0.75;
+// UnrealBloomPass(resolution, strength, radius, threshold): threshold 1.05
+// keeps planet whites (~1.0 max) clean while the HDR Sun (gain ~2.0) blooms.
+let bloomStrength = 0.6;
 let bloomPass = new UnrealBloomPass(
   new THREE.Vector2(sizes.width / 2, sizes.height / 2),
   bloomStrength,
-  0,
-  1
+  0.35,
+  1.05
 );
 
 const rebuildBloom = (): void => {
@@ -399,8 +401,8 @@ const rebuildBloom = (): void => {
   bloomPass = new UnrealBloomPass(
     new THREE.Vector2(sizes.width / 2, sizes.height / 2),
     bloomStrength,
-    0,
-    1
+    0.35,
+    1.05
   );
   bloomComposer.addPass(bloomPass);
 };
@@ -538,6 +540,10 @@ const fps = new FreeRoam({
     camera.position.copy(worldPos);
     camera.quaternion.copy(worldQuat);
     document.body.classList.add("fps-active");
+    document.body.classList.remove("fps-locked");
+    document
+      .getElementById("btn-fps")
+      ?.setAttribute("data-tooltip", "Exit free roam");
     if (!detached) {
       // The focus body is no longer the anchor — hide its POI labels and
       // close its facts card while flying.
@@ -547,6 +553,10 @@ const fps = new FreeRoam({
   },
   onExit: () => {
     document.body.classList.remove("fps-active");
+    document.body.classList.remove("fps-locked");
+    document
+      .getElementById("btn-fps")
+      ?.setAttribute("data-tooltip", "Free roam flight — WASD + mouse");
     // The camera stays EXACTLY where it is — no re-parenting, no re-aiming,
     // no snapping to a planet. Free roam is deselected; the free camera
     // ("third mode") takes over from this very pose. Re-entering free roam
@@ -583,6 +593,44 @@ const pathFaderCameraPos = new THREE.Vector3();
 // Fading comet-tail trails behind every planet & dwarf planet (world space).
 const trails = new MotionTrails(solarSystem, getWorldScale);
 trails.attachTo(scene);
+// Boot lands directly in detached free-roam flight from the scene-root boot
+// pose (no teleport: the cameras were already placed + aimed at boot, and
+// FreeRoam.enter seeds yaw/pitch from the existing quaternion). options.focus
+// stays "Sun" as the telemetry fallback; the caption reads "Free roam".
+let bootRoamEntered = false;
+const enterBootRoam = (): void => {
+  if (bootRoamEntered || fps.active) return;
+  bootRoamEntered = true;
+  if (fakeCamera.parent !== scene) {
+    scene.add(fakeCamera);
+    scene.add(camera);
+  }
+  fakeCamera.position.set(-7.5, 9, 24);
+  solarSystem["Sun"].mesh.getWorldPosition(focusAimPos);
+  fakeCamera.lookAt(focusAimPos);
+  camera.position.copy(fakeCamera.position);
+  camera.quaternion.copy(fakeCamera.quaternion);
+  setDetached(true);
+  freeCamera.enter();
+  infoPanel.close();
+  captionEl.innerHTML = "Free roam";
+  const btnFps = document.getElementById("btn-fps");
+  if (btnFps) {
+    btnFps.setAttribute("aria-pressed", String(false));
+    btnFps.classList.toggle("is-active", false);
+  }
+};
+window.addEventListener("loading-dismissed", enterBootRoam, { once: true });
+// Fallback: if the loading screen was already dismissed before this
+// listener attached, enter immediately (guarded by bootRoamEntered).
+const bootLoadEl = document.getElementById("loading");
+if (
+  bootLoadEl &&
+  (bootLoadEl.style.display === "none" ||
+    bootLoadEl.style.pointerEvents === "none")
+) {
+  enterBootRoam();
+}
 
 document.getElementById("btn-fps")?.addEventListener("click", () => {
   if (fps.active) {
@@ -613,7 +661,7 @@ canvas.addEventListener("pointerdown", (e) => {
 });
 
 canvas.addEventListener("pointerup", (e) => {
-  if (fps.active) return; // pointer-lock flight: no planet picking
+  if (fps.active) return; // flying: no planet picking
   if (Math.hypot(e.clientX - pointerDown.x, e.clientY - pointerDown.y) > 6) return;
   pointer.x = (e.clientX / sizes.width) * 2 - 1;
   pointer.y = -(e.clientY / sizes.height) * 2 + 1;
@@ -799,6 +847,7 @@ if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
   );
 
   asteroidBelt.tick(elapsedTime);
+  kuiperBelt.tick(elapsedTime);
 
   // Update the solar system objects
   for (const object of Object.values(solarSystem)) {
@@ -869,17 +918,19 @@ if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
   // fight unconstrained flight, and it has no pivot in detached mode).
   if (fps.active) {
     fps.update(dt);
-    // Live flight-speed HUD.
+    // Live flight-speed HUD (compact title readout).
     const speedEl = document.getElementById("fps-speed-value");
     if (speedEl) {
-      speedEl.textContent = `${Math.round(fps.getSpeed())} u/s`;
+      speedEl.textContent = `· ${Math.round(fps.getSpeed())} u/s`;
     }
   } else if (detached) {
     freeCamera.update(dt);
   }
 
-  // Update camera
   camera.copy(fakeCamera);
+  // Three-version-proof layer sync: copy() copies position/rotation but not
+  // the layer mask, so the rendered camera must mirror fakeCamera's layers.
+  camera.layers.mask = fakeCamera.layers.mask;
 
   // Update controls (skipped during free-roam and detached — see above)
   if (!fps.active && !detached) {

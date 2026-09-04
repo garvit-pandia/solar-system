@@ -1,0 +1,62 @@
+/* ============================================================
+   Bezel — 1px instrument seam on the left edge.
+   CSS-only, pointer-events none, sits above panels (z 50).
+   ============================================================ */
+
+#bezel {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  z-index: 50;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(255, 200, 80, 0.35),
+    transparent
+  );
+  opacity: 0.12;
+  transition: opacity 0.22s ease;
+}
+
+body:has(.toolbar:hover, #info-panel:hover, #sim-date:hover) #bezel {
+  opacity: 0.22;
+}
+
+body.cinematic #bezel {
+  opacity: 0.06;
+}
+
+@keyframes bezel-scan {
+  from {
+    box-shadow: 0 -100vh 0 1px rgba(255, 200, 80, 0.8);
+  }
+
+  to {
+    box-shadow: 0 100vh 0 1px rgba(255, 200, 80, 0);
+  }
+}
+
+/* Entry sweep — add .scan on free-roam entry; plays once. */
+#bezel.scan {
+  animation: bezel-scan 0.6s ease 1;
+}
+
+/* Cinematic vignette + grain seam over the 3D view (below UI chrome). */
+#vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 120% 90% at 50% 45%, transparent 55%, rgba(2, 3, 8, 0.42) 100%),
+    linear-gradient(180deg, rgba(2, 3, 8, 0.18) 0%, transparent 12%, transparent 88%, rgba(2, 3, 8, 0.28) 100%);
+}
+
+body.cinematic #vignette {
+  background:
+    radial-gradient(ellipse 120% 90% at 50% 45%, transparent 48%, rgba(0, 0, 0, 0.55) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, transparent 12%, transparent 88%, rgba(0, 0, 0, 0.4) 100%);
+}

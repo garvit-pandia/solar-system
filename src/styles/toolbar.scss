@@ -1,5 +1,13 @@
 @use "./tokens.scss" as *;
 
+:root {
+  --rail-w: 56px;
+}
+
+body.rail-expanded {
+  --rail-w: 184px;
+}
+
 /* ============================================================
    Tool rail — slim icon-only dock on the left edge
    Groups separated by hairlines; toggles show their state

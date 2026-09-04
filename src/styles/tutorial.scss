@@ -5,6 +5,7 @@
    ============================================================ */
 
 #welcome-card {
+  display: none;
   position: fixed;
   top: 50%;
   left: 50%;
@@ -20,6 +21,11 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease, transform 0.3s ease;
+
+  &.visible,
+  &.force-show {
+    display: block;
+  }
 
   &.visible {
     opacity: 1;
@@ -87,6 +93,22 @@
       font-size: 0.75rem;
     }
   }
+}
+
+/* Coach mark — small glass chip for first-run guidance. */
+.coach-mark {
+  @extend %glass-panel;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: $radius-btn;
+  font-family: $font;
+  font-size: 0.68rem;
+  font-weight: 200;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+  color: $text-72;
 }
 
 /* Spotlight tour */
@@ -202,5 +224,48 @@
      rest of the rail). */
   &.tooltip-right {
     transform: translate(0, -50%);
+  }
+}
+
+/* Hover name chip — above the rail (20), below the help scrim (25).
+   Scoped to body for specificity: hud.scss (later in the cascade) sets
+   the base z-index. */
+body #planet-tooltip {
+  z-index: 22;
+}
+
+/* Ambient coach chip — replaces the welcome wall on first boot. */
+.coach-mark {
+  padding: 0.45rem 1rem;
+  background: $panel-bg-strong;
+  backdrop-filter: $panel-blur;
+  -webkit-backdrop-filter: $panel-blur;
+  border: $hairline;
+  border-radius: $radius-pill;
+  box-shadow: $panel-shadow;
+  color: $text-72;
+  font-family: $font;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  animation: coach-in 0.3s ease;
+}
+
+/* While flying, the fps-hint owns bottom-centre — dock the coach above it. */
+body.fps-active .coach-mark {
+  bottom: 6.5rem !important;
+}
+
+@keyframes coach-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
   }
 }

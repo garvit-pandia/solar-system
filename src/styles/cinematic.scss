@@ -43,6 +43,7 @@ body.cinematic {
   #telemetry,
   #fps-hint,
   #welcome-card,
+  .coach-mark,
   #help-panel,
   #quiz-card,
   #nav-palette,
@@ -56,6 +57,8 @@ body.cinematic {
 }
 
 // Smooth the transitions on the layers themselves (harmless when idle).
+// Staggered fade-out under body.cinematic: rail first, HUD next,
+// focus pill next, facts card last.
 .toolbar,
 .caption,
 #info-panel,
@@ -68,6 +71,25 @@ body.cinematic {
 #nav-palette,
 #label-layer .label {
   transition: opacity 0.3s ease;
+}
+
+body.cinematic {
+  .toolbar {
+    transition-delay: 100ms;
+  }
+
+  #sim-date,
+  #telemetry {
+    transition-delay: 150ms;
+  }
+
+  .caption {
+    transition-delay: 200ms;
+  }
+
+  #info-panel {
+    transition-delay: 250ms;
+  }
 }
 
 /* Floating capture chip — the only visible UI during cinematic mode. */

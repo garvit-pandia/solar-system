@@ -16,18 +16,18 @@ export const createLights = (): Lights => {
   // Ambient light
   const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
 
-  // Point light — the Sun (intensity tuned so bright cloud bands keep
-  // texture: 0.95 sun + 0.45 day ambient ≈ 1.4 max, under the clip point).
-  const pointLight = new THREE.PointLight(0xffffff, 0.95, 0, 0);
-  pointLight.castShadow = true;
+  // Point light — the Sun (warm key that keeps texture: 0.7 sun + 0.32 day
+  // ambient ≈ 1.0 max, at the clip point so daysides hold detail).
+  const pointLight = new THREE.PointLight(0xfff2d8, 0.7, 0, 0);
   // 2048² per cube face (6 faces) — PCFSoft + radius 16 already soften the
   // edges; 4096² was measurable fill-rate for no visible gain at planet
   // scale. (Shadows are disabled entirely in true-scale mode — the shadow
-  // camera only covers 30 units around the Sun.)
+  // camera only covers 45 units around the Sun, wide enough to reach
+  // the Pluto view-mode orbit at ~32 units.)
   pointLight.shadow.mapSize.width = 2048;
   pointLight.shadow.mapSize.height = 2048;
   pointLight.shadow.camera.near = 1.5;
-  pointLight.shadow.camera.far = 30;
+  pointLight.shadow.camera.far = 45;
   pointLight.shadow.radius = 16;
 
   return [ambientLight, pointLight];

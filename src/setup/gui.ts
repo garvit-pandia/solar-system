@@ -5,7 +5,7 @@ import { LAYERS } from "../constants";
 import * as THREE from "three";
 
 /** Ambient intensity in "day" mode (toolbar toggle on). */
-export const AMBIENT_BRIGHT = 0.45;
+export const AMBIENT_BRIGHT = 0.32;
 /** Ambient intensity in "night" mode (toolbar toggle off). */
 export const AMBIENT_DIM = 0.06;
 
@@ -62,8 +62,10 @@ export const applyPathVisibility = (solarSystem: SolarSystem): void => {
   }
 };
 
-/** Reflect the current option state on the toolbar toggle buttons. */
-export const syncToolbar = (): void => {
+/** Reflect the current option state on the toolbar toggle buttons. Pass the
+ * camera (used to reconcile the POI-label layer) when called outside the
+ * click handler; the handler will have already done it itself. */
+export const syncToolbar = (camera?: THREE.Camera | null): void => {
   const setPressed = (id: string, on: boolean) => {
     const el = document.getElementById(id);
     if (!el) return;
@@ -74,6 +76,18 @@ export const syncToolbar = (): void => {
   setPressed("btn-moon-paths", options.showMoonPaths);
   setPressed("btn-ambient", options.ambientOn);
   setPressed("btn-labels", options.showLabels);
+  if (camera) syncLabelLayers(camera);
+};
+
+/**
+ * Set the camera's POI-label layer explicitly from `options.showLabels`.
+ * Always read from the options object (not a cached boolean) so the layers
+ * mask never drifts out of sync with the toolbar state.
+ */
+export const syncLabelLayers = (camera: THREE.Camera | null): void => {
+  if (!camera) return;
+  if (options.showLabels) camera.layers.enable(LAYERS.POILabel);
+  else camera.layers.disable(LAYERS.POILabel);
 };
 
 export const createGUI = (
@@ -219,7 +233,10 @@ export const createGUI = (
   // copies layers). Toggling the render camera alone would be overwritten.
   document.getElementById("btn-labels")?.addEventListener("click", () => {
     options.showLabels = !options.showLabels;
-    camera.layers.toggle(LAYERS.POILabel);
+    // Authoritative sync: always derive the layer state from
+    // options.showLabels (enable on, disable off) so we can't end up out
+    // of step with the options object on rapid double-clicks.
+    syncLabelLayers(camera);
     syncToolbar();
   });
 
@@ -236,6 +253,7 @@ export const createGUI = (
 
   const applyRailExpanded = (expanded: boolean): void => {
     toolbar?.classList.toggle("expanded", expanded);
+    document.body.classList.toggle("rail-expanded", expanded);
     if (railToggle) {
       railToggle.setAttribute("aria-expanded", String(expanded));
       railToggle.setAttribute("aria-label", expanded ? "Hide tool names" : "Show tool names");
@@ -269,5 +287,7 @@ export const createGUI = (
   });
 
   applyPathVisibility(solarSystem);
-  syncToolbar();
+  // Pass the camera so the boot-time sync pushes the POI-label layer state
+  // onto the fakeCamera (and through copy() to the render camera).
+  syncToolbar(camera);
 };

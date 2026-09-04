@@ -11,7 +11,16 @@
 @use "./styles/cinematic.scss";
 @use "./styles/help-panel.scss";
 @use "./styles/nav-palette.scss";
+@use "./styles/bezel.scss";
 
+/* Rail-width fallback (canonical def lives in toolbar.scss; harmless duplicate). */
+:root {
+  --rail-w: 56px;
+}
+
+body.rail-expanded {
+  --rail-w: 184px;
+}
 * {
   margin: 0;
   padding: 0;
@@ -57,14 +66,42 @@ canvas {
   }
 }
 
-/* Small screens: nudge centred overlays right of the tool rail so the
-   rail never covers their text. */
+/* Small screens: centred pills dock above the bottom sheet + coach chip,
+   and nudge right of the tool rail so the rail never covers their text. */
 @media (max-width: 620px) {
   #welcome-card,
   #quiz-card,
   #nav-palette .palette-card {
     left: calc(50% + 1.75rem);
     max-width: calc(100vw - 5.5rem);
+  }
+
+  .caption {
+    bottom: auto;
+    top: 4.6rem;
+    left: calc(50% + 1.75rem);
+    transform: translateX(-50%);
+    max-width: calc(100vw - 5.5rem);
+    padding: 0.32rem 0.5rem;
+  }
+
+  .caption p {
+    min-width: 0;
+    font-size: 0.68rem;
+  }
+
+  .caption button {
+    width: 32px;
+    height: 32px;
+  }
+
+  .coach-mark {
+    bottom: auto !important;
+    top: 8rem;
+  }
+
+  body.fps-active .coach-mark {
+    top: 8rem;
   }
 
   #help-panel {

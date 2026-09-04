@@ -6,15 +6,17 @@
 
 #sim-date {
   position: fixed;
-  /* Sits right of the tool rail (rail right edge ≈ 3.5rem). */
+  /* Clears the tool rail: rail offset + rail width + gutter. */
   top: 1.2rem;
-  left: 4.5rem;
+  left: calc(0.75rem + var(--rail-w) + 0.75rem);
+  transition: left 0.22s ease;
   z-index: 8;
   font-family: $font;
   font-size: 0.68rem;
-  font-weight: 200;
+  font-weight: 500;
   letter-spacing: 0.08em;
-  color: $text-55;
+  color: $text-92;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
   background: $panel-bg;
   backdrop-filter: $panel-blur;
   -webkit-backdrop-filter: $panel-blur;
@@ -32,7 +34,8 @@
 #date-popover {
   position: fixed;
   top: 5.7rem;
-  left: 4.5rem;
+  left: calc(0.75rem + var(--rail-w) + 0.75rem);
+  transition: left 0.22s ease;
   z-index: 9;
   display: flex;
   flex-direction: column;
@@ -109,17 +112,18 @@
 #telemetry {
   position: fixed;
   top: 3.3rem;
-  left: 4.5rem;
+  left: calc(0.75rem + var(--rail-w) + 0.75rem);
+  transition: left 0.22s ease;
   z-index: 8;
   display: flex;
   align-items: center;
   gap: 0.6rem;
   font-family: $font;
   font-size: 0.62rem;
-  font-weight: 200;
+  font-weight: 500;
   letter-spacing: 0.06em;
   white-space: nowrap;
-  color: $text-55;
+  color: $text-92;
   background: $panel-bg;
   backdrop-filter: $panel-blur;
   -webkit-backdrop-filter: $panel-blur;

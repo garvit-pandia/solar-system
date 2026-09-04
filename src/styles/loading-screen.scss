@@ -14,6 +14,19 @@ $loader-size: 75px;
   left: 0;
   background-color: #04050c;
   z-index: 100;
+
+  // First-draw instrument seam: 1px amber left edge, bezel-adjacent.
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(180deg, transparent, rgba(255, 200, 80, 0.35), transparent);
+    opacity: 0.12;
+    pointer-events: none;
+  }
 }
 
 #welcome {
@@ -79,6 +92,7 @@ $loader-size: 75px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: $text-55;
+  font-variant-numeric: tabular-nums;
 
   div {
     opacity: 0;

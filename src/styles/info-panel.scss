@@ -7,8 +7,8 @@
 #info-panel {
   position: fixed;
   /* Aligned just right of the tool rail so the two read as one
-     docked column on the left edge. */
-  left: 4.25rem;
+     docked column on the left edge. Follows --rail-w with the rail. */
+  left: calc(0.75rem + var(--rail-w) + 0.75rem);
   bottom: 1.5rem;
   z-index: 9;
   width: min(264px, calc(100vw - 3rem));
@@ -19,7 +19,7 @@
   opacity: 0;
   transform: translateY(16px);
   pointer-events: none;
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition: opacity 0.25s ease, transform 0.25s ease, left 0.22s ease;
 
   &.visible {
     opacity: 1;
@@ -38,9 +38,10 @@
     h2 {
       font-size: 0.95rem;
       font-weight: 800;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: $accent-text;
+      color: #fff;
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
     }
   }
 
@@ -96,11 +97,19 @@
   }
 }
 
+/* Clear the centred caption pill in the 620-900px band where the fixed
+   card and the pill would otherwise collide. */
+@media (max-width: 900px) {
+  #info-panel {
+    bottom: 5.2rem;
+  }
+}
+
 /* Phone layout: the card becomes a bottom sheet so it never covers the
-   caption pill or overflows narrow screens. */
+   caption pill or overflows narrow screens. Left edge clears the rail. */
 @media (max-width: 620px) {
   #info-panel {
-    left: 0.75rem;
+    left: calc(0.75rem + var(--rail-w, 56px) + 0.5rem);
     right: 0.75rem;
     bottom: 4.6rem;
     width: auto;

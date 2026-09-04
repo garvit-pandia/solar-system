@@ -340,16 +340,21 @@ export class PlanetaryObject {
     const geometry = new THREE.SphereGeometry(this.radius, 64, 64);
     let material;
     if (this.type === "star") {
+      // Sodium-amber disc with HDR gain ABOVE the bloom threshold (1.2) so
+      // only the Sun blooms; planet whites (~1.0 max) stay clean.
       material = new THREE.MeshBasicMaterial({
         map: this.map,
         lightMapIntensity: 2,
         toneMapped: false,
-        color: new THREE.Color(2.5, 2.5, 2.5),
+        color: new THREE.Color(2.2, 1.6, 1.1),
       });
     } else {
+      // Matte observatory finish: near-zero specular so the sub-solar point
+      // never clips to white; bands and storms keep texture at noon.
       material = new THREE.MeshPhongMaterial({
         map: this.map,
-        shininess: 5,
+        shininess: 0,
+        specular: new THREE.Color(0x000000),
         toneMapped: true,
       });
 
