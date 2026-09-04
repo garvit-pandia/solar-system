@@ -1,5 +1,5 @@
 # AGENTS.md — Solar System Model
-
+123
 Three.js + Vite + TypeScript interactive solar-system simulator (personal portfolio project by Garvit). No test suite, no linter — `npm run typecheck` is the gate, plus visual verification in a browser.
 
 ## Commands
