@@ -1,0 +1,19 @@
+# Normalize line endings across Windows / macOS / Linux checkouts.
+# Text files use LF in the repo; Git converts to the platform default on checkout.
+* text=auto eol=lf
+
+# Shell scripts and Node ESM scripts MUST stay LF — a CRLF shebang line
+# breaks execution on Linux/macOS (`/usr/bin/env: bad interpreter`).
+*.sh text eol=lf
+*.mjs text eol=lf
+
+# Windows batch files need CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Generated/binary assets — never touch.
+*.png binary
+*.jpg binary
+*.ktx2 binary
+*.wasm binary
+*.ico binary

@@ -1,11 +1,15 @@
 # AGENTS.md — Solar System Model
-123
+
 Three.js + Vite + TypeScript interactive solar-system simulator (personal portfolio project by Garvit). No test suite, no linter — `npm run typecheck` is the gate, plus visual verification in a browser.
 
 ## Commands
 - `npm run dev` — Vite dev server at `http://localhost:5173/solar-system/` (base path is `/solar-system/`)
 - `npm run build` — production build to `../dist`
+- `npm run preview` — serve the production bundle locally
 - `npm run typecheck` — `tsc --noEmit`; run this after every change
+- `npm run build-stars` — regenerate `static/data/*.json` (needs downloads in `.tmp-stars/`; see script header)
+- `npm run build-textures` — regenerate `.ktx2` + `texture-manifest.ts` (needs `toktx`; OPTIONAL, outputs are committed)
+- Toolchain: Node 20+ (`.nvmrc` pins 22; `engines` enforces it). CI uses `npm ci` + typecheck + build on `ubuntu-latest`.
 
 ## Layout
 - `src/script.ts` — entry: scene, render/bloom pipeline, camera mode state machine, input handlers, main `tick()` loop
@@ -27,7 +31,11 @@ Three.js + Vite + TypeScript interactive solar-system simulator (personal portfo
 ## Gotchas
 - `THREE.ColorManagement.enabled = false` + `LinearSRGBColorSpace` output is the intended legacy look — don't "modernize" it.
 - The loading screen completes only when every `loadTexture` settles (success OR error counts) — new textures must go through `loadTexture`/`setTextureCount`.
-- Environment: Windows + Git Bash (CRLF warnings are harmless). `node_modules` on this machine suffered junk-file churn from an external process — if tsc/vite vanish, reinstall.
+- Cross-platform: the repo works identically on Windows and Ubuntu. `.gitattributes` forces LF for `*.sh`/`*.mjs` (a CRLF shebang breaks Linux); `import` paths must match file case exactly (Windows tolerates mismatches, Ubuntu doesn't — audited clean). `build-textures-ktx2.mjs` prefers `toktx` on PATH and falls back to the vendored `.tools/ktx/toktx.exe` on Windows.
+- Environment: CRLF warnings from Git are harmless. This machine's `node_modules` once suffered junk-file churn from an external process — if tsc/vite vanish, reinstall.
+- In-app-browser screenshots can artifact (blank canvas, "capture failed") — before chasing a phantom rendering bug, verify via `window.__solar` (dev-only debug hook: scene, cameras, `options`, controllers incl. `cinematic`, `trails`, `telemetry`, `timeTravel`, `eventScanner`, `starfield`) or framebuffer readback.
+- Automated verification recipe: dev server + `window.__solar` (`solarSystem`, `options`, `fps.active`, `palette.onSelect(name)` to jump bodies) + screenshots. Real keyboard events via CUA may silently not reach the page — drive controllers directly instead.
+- Commit doc + screenshot updates together with the feature rounds they describe (STATUS.md + README `docs/screenshots/*.png` at 1600×900); don't let them drift a round behind.
 - In-app-browser screenshots can artifact (blank canvas, "capture failed") — before chasing a phantom rendering bug, verify via `window.__solar` (dev-only debug hook: scene, cameras, `options`, controllers incl. `cinematic`, `trails`, `telemetry`, `timeTravel`, `eventScanner`, `starfield`) or framebuffer readback.
 - Automated verification recipe: dev server + `window.__solar` (`solarSystem`, `options`, `fps.active`, `palette.onSelect(name)` to jump bodies) + screenshots. Real keyboard events via CUA may silently not reach the page — drive controllers directly instead.
 - Commit doc + screenshot updates together with the feature rounds they describe (STATUS.md + README `docs/screenshots/*.png` at 1600×900); don't let them drift a round behind.

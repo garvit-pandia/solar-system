@@ -1,7 +1,15 @@
 // Convert static/textures/*.jpg to KTX2 (Basis Universal) via toktx.
 // Output: .ktx2 next to the sources + src/setup/texture-manifest.ts
 // (the set of basenames that can be loaded through KTX2Loader).
-// Usage: node scripts/build-textures-ktx2.mjs
+// Usage: npm run build-textures
+//
+// toktx resolution order:
+//   1. `toktx` on PATH — Ubuntu: `sudo apt install ktx-tools`; other OSes:
+//      download the KTX-Software release from
+//      https://github.com/KhronosGroup/KTX-Software/releases
+//   2. .tools/ktx/toktx(.exe) — the vendored Windows binary (repo-local fallback)
+// NOTE: this step is OPTIONAL. The generated .ktx2 files are committed to the
+// repo, so a fresh clone can skip it entirely — just `npm install && npm run dev`.
 import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync, statSync, writeFileSync, existsSync } from "node:fs";
 import { join, basename, dirname } from "node:path";
@@ -9,17 +17,39 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const texDir = join(root, "static", "textures");
-const toktx = join(root, ".tools", "ktx", "toktx.exe");
+
+// Resolve toktx cross-platform: prefer a PATH install (works on any OS),
+// fall back to the vendored Windows binary in .tools/ktx/.
+function resolveToktx() {
+  const ext = process.platform === "win32" ? ".exe" : "";
+  const vendored = join(root, ".tools", "ktx", `toktx${ext}`);
+  const onPath = process.platform === "win32" ? "toktx.exe" : "toktx";
+  try {
+    execFileSync(onPath, ["--version"], { stdio: "pipe" });
+    return { cmd: onPath, label: `${onPath} (PATH)` };
+  } catch {
+    if (existsSync(vendored)) return { cmd: vendored, label: vendored };
+    return null;
+  }
+}
 
 const DATA_MAP = /(-bump|-specular|-alpha|clouds-alpha)/i;
 
 const fmtKB = (n) => `${(n / 1024).toFixed(0)} KB`;
 
 const jpgs = readdirSync(texDir).filter((f) => f.toLowerCase().endsWith(".jpg"));
-if (!existsSync(toktx)) {
-  console.error(`toktx not found at ${toktx}`);
+const resolved = resolveToktx();
+if (!resolved) {
+  console.error(
+    "toktx not found. Install it first:\n" +
+      "  Ubuntu:  sudo apt install ktx-tools\n" +
+      "  Windows: place toktx.exe in .tools/ktx/ (already vendored in this repo)\n" +
+      "  macOS/other: download KTX-Software from https://github.com/KhronosGroup/KTX-Software"
+  );
   process.exit(1);
 }
+const { cmd: toktx } = resolved;
+console.log(`using toktx: ${resolved.label}`);
 
 const results = [];
 for (const file of jpgs) {
